@@ -1,9 +1,29 @@
 {
   "search.exclude": {
-    "**/node_modules": true,
-    "**/bower_components": true,
-    "**/.sf": true,
-    "**/.sfdx": true
+    "**/node_modules/**": true,
+    "**/bower_components/**": true,
+    "**/.sf/**": true,
+    "**/.sfdx/**": true,
+    "**/.git/**": true,
+    "**/unpackaged/**": true,
+    "**/mdapi_out/**": true,
+    "**/dist/**": true,
+    "**/target/**": true,
+    "**/force-app/main/default/profiles/**": true
   },
+
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/bower_components/**": true,
+    "**/.sf/**": true,
+    "**/.sfdx/**": true,
+    "**/.git/**": true,
+    "**/unpackaged/**": true,
+    "**/mdapi_out/**": true,
+    "**/dist/**": true,
+    "**/target/**": true,
+    "**/force-app/main/default/profiles/**": true
+  },
+
   "xml.preferences.showSchemaDocumentationType": "none"
 }
