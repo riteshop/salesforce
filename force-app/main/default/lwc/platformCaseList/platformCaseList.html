@@ -1,0 +1,289 @@
+<template>
+    <lightning-card title="All Cases" icon-name="standard:case">
+        <div class="slds-p-around_small">
+
+            <!-- Top Bar -->
+            <div class="slds-m-bottom_small slds-grid slds-grid_align-spread">
+                <lightning-button 
+                    label="New Case"
+                    variant="brand"
+                    onclick={openNewCaseModal}>
+                </lightning-button>
+
+                <div>
+                    Page {pageNumber} of {totalPages} — Total Cases: {totalRecords}
+                </div>
+            </div>
+
+            <!-- SEARCH BAR -->
+            <div class="slds-m-bottom_small">
+                <lightning-input
+                    type="search"
+                    label="Search by Subject"
+                    value={searchTerm}
+                    placeholder="Type to filter cases..."
+                    onkeyup={handleSearchChange}>
+                </lightning-input>
+            </div>
+
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </template>
+
+            <!-- Error -->
+            <template if:true={error}>
+                <p class="slds-text-color_error">{error}</p>
+            </template>
+
+            <!-- CASE TABLE -->
+            <template if:true={cases}>
+                <lightning-datatable
+                    key-field="Id"
+                    data={cases}
+                    columns={columns}
+                    hide-checkbox-column
+                    onsort={handleSort}
+                    sorted-by={sortedBy}
+                    sorted-direction={sortedDirection}
+                    onrowaction={handleRowAction}>
+                </lightning-datatable>
+
+                <!-- Pagination Controls -->
+                <div class="slds-m-top_small slds-grid slds-grid_align-spread">
+                    <lightning-button 
+                        label="Previous" 
+                        onclick={handlePrevious}
+                        disabled={isFirstPage}>
+                    </lightning-button>
+
+                    <div>
+                        Page {pageNumber} of {totalPages}<br/>
+                        Total Cases: {totalRecords}
+                    </div>
+
+                    <lightning-button 
+                        label="Next" 
+                        onclick={handleNext}
+                        disabled={isLastPage}>
+                    </lightning-button>
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+
+    <!-- ===================================== -->
+    <!--              NEW CASE MODAL           -->
+    <!-- ===================================== -->
+    <template if:true={showNewCaseModal}>
+        <section role="dialog" tabindex="-1" aria-modal="true" class="slds-modal slds-fade-in-open">
+            <div class="slds-modal__container">
+
+                <!-- HEADER -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close" title="Close" onclick={closeNewCaseModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="Close" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_medium">New Case</h2>
+                </header>
+
+                <!-- BODY -->
+                <div class="slds-modal__content slds-p-around_medium">
+
+                    <!-- Case Owner (Current User Display) -->
+                    <lightning-input 
+                        label="Case Owner (Current User)" 
+                        value="You (Current User)"
+                        disabled>
+                    </lightning-input>
+
+                    <!-- CASE OWNER LOOKUP -->
+                    <div class="lookup-container slds-m-top_medium">
+                        <lightning-input
+                            label="Change Case Owner"
+                            value={ownerSearchTerm}
+                            onchange={handleOwnerSearchChange}
+                            placeholder="Search Users..."
+                            class="lookup-input">
+                        </lightning-input>
+
+                        <template if:true={ownerResultsVisible}>
+                            <div class="lookup-dropdown">
+                                <template for:each={ownerOptions} for:item="o">
+                                    <div 
+                                        key={o.value}
+                                        class="lookup-option"
+                                        data-id={o.value}
+                                        data-name={o.label}
+                                        onclick={handleOwnerSelect}>
+                                        {o.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- CONTACT LOOKUP -->
+                    <div class="lookup-container slds-m-top_medium">
+                        <lightning-input
+                            label="Contact Name"
+                            value={contactSearchTerm}
+                            onchange={handleContactSearchChange}
+                            placeholder="Search Contacts..."
+                            class="lookup-input">
+                        </lightning-input>
+
+                        <template if:true={contactResultsVisible}>
+                            <div class="lookup-dropdown">
+                                <template for:each={contactOptions} for:item="c">
+                                    <div 
+                                        key={c.value}
+                                        class="lookup-option"
+                                        data-id={c.value}
+                                        data-name={c.label}
+                                        onclick={handleContactSelect}>
+                                        {c.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- ACCOUNT LOOKUP -->
+                    <div class="lookup-container slds-m-top_medium">
+                        <lightning-input
+                            label="Account Name"
+                            value={accountSearchTerm}
+                            onchange={handleAccountSearchChange}
+                            placeholder="Search Accounts..."
+                            class="lookup-input">
+                        </lightning-input>
+
+                        <template if:true={accountResultsVisible}>
+                            <div class="lookup-dropdown">
+                                <template for:each={accountOptions} for:item="acc">
+                                    <div 
+                                        key={acc.value}
+                                        class="lookup-option"
+                                        data-id={acc.value}
+                                        data-name={acc.label}
+                                        onclick={handleAccountSelect}>
+                                        {acc.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- ASSIGNED USER LOOKUP -->
+                    <div class="lookup-container slds-m-top_medium">
+                        <lightning-input
+                            label="Assigned User"
+                            value={userSearchTerm}
+                            onchange={handleUserSearchChange}
+                            placeholder="Search Users..."
+                            class="lookup-input">
+                        </lightning-input>
+
+                        <template if:true={userResultsVisible}>
+                            <div class="lookup-dropdown">
+                                <template for:each={userOptions} for:item="u">
+                                    <div 
+                                        key={u.value}
+                                        class="lookup-option"
+                                        data-id={u.value}
+                                        data-name={u.label}
+                                        onclick={handleUserSelect}>
+                                        {u.label}
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- CASE FIELDS -->
+                    <lightning-combobox
+                        class="slds-m-top_medium"
+                        label="Status"
+                        value={newCaseStatus}
+                        options={statusOptions}
+                        onchange={handleFieldChange}
+                        data-field="Status">
+                    </lightning-combobox>
+
+                    <lightning-combobox
+                        class="slds-m-top_medium"
+                        label="Case Origin"
+                        value={newCaseOrigin}
+                        options={originOptions}
+                        onchange={handleFieldChange}
+                        data-field="Origin">
+                    </lightning-combobox>
+
+                    <lightning-combobox
+                        class="slds-m-top_medium"
+                        label="Priority"
+                        value={newCasePriority}
+                        options={priorityOptions}
+                        onchange={handleFieldChange}
+                        data-field="Priority">
+                    </lightning-combobox>
+
+                    <lightning-combobox
+                        class="slds-m-top_medium"
+                        label="Case Reason"
+                        value={newCaseReason}
+                        options={reasonOptions}
+                        onchange={handleFieldChange}
+                        data-field="Reason">
+                    </lightning-combobox>
+
+                    <lightning-combobox
+                        class="slds-m-top_medium"
+                        label="Type"
+                        value={newCaseType}
+                        options={typeOptions}
+                        onchange={handleFieldChange}
+                        data-field="Type">
+                    </lightning-combobox>
+
+                    <lightning-input
+                        class="slds-m-top_medium"
+                        label="Subject"
+                        value={newCaseSubject}
+                        onchange={handleSubjectChange}>
+                    </lightning-input>
+
+                    <lightning-textarea
+                        class="description-box slds-m-top_medium"
+                        label="Description"
+                        value={newCaseDescription}
+                        onchange={handleDescriptionChange}
+                        rows="10">
+                    </lightning-textarea>
+
+                </div>
+
+                <!-- FOOTER -->
+                <footer class="slds-modal__footer">
+                    <lightning-button 
+                        label="Cancel" 
+                        onclick={closeNewCaseModal}>
+                    </lightning-button>
+
+                    <lightning-button 
+                        class="slds-m-left_small" 
+                        variant="brand" 
+                        label="Create Case" 
+                        onclick={handleCreateCase}>
+                    </lightning-button>
+                </footer>
+
+            </div>
+        </section>
+
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+
+</template>

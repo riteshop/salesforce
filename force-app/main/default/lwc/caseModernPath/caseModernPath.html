@@ -1,0 +1,55 @@
+<template>
+    <template if:true={stages}>
+        <div class="modern-path">
+            <div class="modern-path__track">
+                <template for:each={stages} for:item="stage">
+                    <div key={stage.label}
+                         class={stage.cssClass}
+                         data-label={stage.label}
+                         onclick={handleStageClick}>
+
+                        <div class="path-step__circle"></div>
+                        <div class="path-step__label">{stage.label}</div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- ACTIONS MENU (separate, intentional) -->
+            <div class="path-actions">
+                <lightning-button-menu
+                    alternative-text="Actions"
+                    icon-name="utility:down"
+                    menu-alignment="right"
+                    onselect={handleActionSelect}>
+                    
+                    <lightning-menu-item
+                        value="back"
+                        label="Go Back One Step">
+                    </lightning-menu-item>
+
+                    <lightning-menu-item
+                        value="close"
+                        label="Close Case">
+                    </lightning-menu-item>
+
+                </lightning-button-menu>
+            </div>
+        </div>
+    </template>
+
+    <template if:true={showConfirm}>
+        <div class="confirm-container">
+            <lightning-button
+                variant="brand"
+                label="Confirm Status Change"
+                onclick={confirmChange}>
+            </lightning-button>
+
+            <lightning-button
+                variant="neutral"
+                label="Cancel"
+                onclick={cancelChange}>
+            </lightning-button>
+        </div>
+    </template>
+</template>

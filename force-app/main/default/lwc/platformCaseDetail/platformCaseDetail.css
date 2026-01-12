@@ -1,0 +1,263 @@
+/* =======================================
+   SECTION HEADER
+   ======================================= */
+.section-header {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+    color: #2d2d2d;
+    border-left: 4px solid #1589ee;
+    padding-left: 10px;
+}
+
+/* =======================================
+   DESCRIPTION FIELD (Case Description)
+   ======================================= */
+.description-box {
+    --slds-c-textarea-sizing-min-height: 200px;
+    --slds-c-textarea-sizing-height: 200px;
+}
+
+/* =======================================
+   EMAIL COMPOSER - ADDRESS CHIPS (To / CC / BCC)
+   + reused for Send From / Subject / Body wrappers
+   ======================================= */
+.address-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+
+    border: 2px solid #c9c9c9;
+    border-radius: 0.5rem;
+
+    padding: 0.5rem;
+    min-height: 2.5rem;
+    background: #ffffff;
+
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Focus rings same as other email fields */
+.address-row:focus-within {
+    border-color: #1589ee;
+    box-shadow: 0 0 0 3px rgba(21, 137, 238, 0.1);
+}
+
+/* Pills styling */
+lightning-pill {
+    margin: 0;
+}
+
+/* Inner lightning-input styling (text field inside chip row) */
+.address-row lightning-input {
+    flex: 1;
+    min-width: 10rem;
+}
+
+.address-row lightning-input input {
+    border: none !important;
+    background: transparent !important;
+    padding: 0.25rem !important;
+    box-shadow: none !important;
+}
+
+.address-row lightning-input input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Remove default SLDS borders on the inner input component */
+.address-input {
+    --slds-c-input-color-border: transparent;
+    --slds-c-input-color-background: transparent;
+    --slds-c-input-sizing-border: 0;
+    --slds-c-input-shadow-focus: none;
+}
+
+/* =======================================
+   EMAIL COMPOSER - CUSTOM FIELDS
+   (Send From / Subject / Body)
+   ======================================= */
+.address-select {
+    width: 100%;
+    border: none;
+    background: transparent;
+    min-height: 1.5rem;
+    font-size: 0.9rem;
+    color: #2d2d2d;
+    outline: none;
+}
+
+.address-plain-input {
+    width: 100%;
+    border: none !important;
+    background: transparent !important;
+    padding: 0.25rem !important;
+    box-shadow: none !important;
+    font-size: 0.9rem;
+    color: #2d2d2d;
+}
+
+.address-plain-input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.address-row-textarea {
+    align-items: stretch;
+}
+
+.address-textarea {
+    width: 100%;
+    border: none !important;
+    background: transparent !important;
+    min-height: 200px;
+    padding: 0.25rem !important;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #2d2d2d;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    resize: vertical;
+}
+
+.address-textarea:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* =======================================
+   SEND BUTTON ENHANCEMENT
+   ======================================= */
+lightning-button[label="Send Email"] {
+    --slds-c-button-brand-color-background: #1589ee;
+    --slds-c-button-brand-color-border: #1589ee;
+}
+
+/* =======================================
+   EMAIL HISTORY BUBBLES (Incoming / Outgoing)
+   ======================================= */
+.email-bubble {
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.email-bubble.inbound {
+    background-color: #f4f6f9;
+    border-left: 4px solid #1b96ff;
+}
+
+.email-bubble.outbound {
+    background-color: #fef7f1;
+    border-right: 4px solid #ffb75d;
+}
+
+.email-body {
+    white-space: pre-wrap;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+}
+
+/* =======================================
+   SCROLLABLE EMAIL HISTORY CONTAINER
+   ======================================= */
+.email-history-container {
+    max-height: 450px;
+    overflow-y: auto;
+}
+
+/* =======================================
+   EMAIL HISTORY CARD
+   ======================================= */
+.email-card {
+    border: 1px solid #d8dde6;
+    border-radius: 0.5rem;
+    background: white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* =======================================
+   TAGS FOR INCOMING/OUTGOING LABEL
+   ======================================= */
+.email-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+.email-tag.incoming {
+    background: #e3fcef;
+    color: #0b6b43;
+}
+
+.email-tag.outgoing {
+    background: #e5f1fb;
+    color: #005fb2;
+}
+
+/* =======================================
+   LOOKUP CONTAINER STYLING
+   (Owner box should look standard/black)
+   ======================================= */
+.lookup-container {
+    position: relative;
+}
+
+.lookup-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #000000;
+    border-radius: 0.5rem;
+    font-size: 0.9rem;
+    color: #2d2d2d;
+    background: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lookup-input:focus {
+    outline: none;
+    border-color: #1589ee;
+    box-shadow: 0 0 0 3px rgba(21, 137, 238, 0.1);
+}
+
+.lookup-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #d8dde6;
+    border-radius: 0.5rem;
+    margin-top: 0.25rem;
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    list-style: none;
+    padding: 0;
+}
+
+.lookup-option {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.lookup-option:hover {
+    background-color: #f4f6f9;
+}
+
+/* =======================================
+   TEXT WRAPPING
+   ======================================= */
+.wrap-text {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}

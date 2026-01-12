@@ -1,0 +1,358 @@
+<template>
+    <lightning-card title="Case Details" icon-name="standard:case">
+        <div class="slds-p-around_medium">
+
+            <!-- LOADING -->
+            <template if:true={isLoading}>
+                <lightning-spinner></lightning-spinner>
+            </template>
+
+            <template if:true={caseRecord}>
+
+                <!-- ================================================= -->
+                <!-- CASE INFORMATION -->
+                <!-- ================================================= -->
+                <h2 class="section-header">Case Information</h2>
+
+                <p><strong>Case Number:</strong> {caseRecord.CaseNumber}</p>
+                <p><strong>Account:</strong> {accountName}</p>
+                <p><strong>Contact:</strong> {contactName}</p>
+
+                <hr class="slds-m-vertical_medium" />
+
+                <!-- ================================================= -->
+                <!-- EMAIL COMPOSER -->
+                <!-- ================================================= -->
+                <h2 class="section-header">Send Email</h2>
+
+                <!-- SEND FROM (CUSTOM WRAP, NOT LIGHTNING) -->
+                <div class="slds-m-top_small">
+                    <label class="slds-form-element__label">Send From</label>
+                    <div class="address-row">
+                        <select
+                            class="address-select"
+                            value={selectedFromAddress}
+                            onchange={handleFromAddressChange}>
+                            <template for:each={fromAddressOptions} for:item="opt">
+                                <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- TO FIELD -->
+                <div class="slds-m-top_small">
+                    <label class="slds-form-element__label">To</label>
+                    <div class="address-row">
+
+                        <template for:each={emailToList} for:item="addr">
+                            <lightning-pill
+                                key={addr}
+                                name={addr}
+                                label={addr}
+                                onremove={removeTo}>
+                            </lightning-pill>
+                        </template>
+
+                        <lightning-input
+                            class="address-input"
+                            variant="label-hidden"
+                            placeholder="Add recipient"
+                            value={emailToInput}
+                            onchange={handleToInputChange}
+                            onkeydown={handleToKeydown}>
+                        </lightning-input>
+                    </div>
+                </div>
+
+                <!-- CC/BCC TOGGLE (UI ONLY - uses your existing logic) -->
+                <div class="slds-m-top_small">
+                    <lightning-button
+                        variant="base"
+                        label={ccBccButtonLabel}
+                        onclick={toggleCcBcc}>
+                    </lightning-button>
+                </div>
+
+                <!-- CC + BCC RENDER ONLY WHEN TOGGLED ON -->
+                <template if:true={showCcBcc}>
+
+                    <!-- CC -->
+                    <div class="slds-m-top_small">
+                        <label class="slds-form-element__label">CC</label>
+                        <div class="address-row">
+
+                            <template for:each={emailCCList} for:item="addr">
+                                <lightning-pill
+                                    key={addr}
+                                    name={addr}
+                                    label={addr}
+                                    onremove={removeCC}>
+                                </lightning-pill>
+                            </template>
+
+                            <lightning-input
+                                class="address-input"
+                                variant="label-hidden"
+                                placeholder="Add CC"
+                                value={emailCCInput}
+                                onchange={handleCCInputChange}
+                                onkeydown={handleCCKeydown}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                    <!-- BCC -->
+                    <div class="slds-m-top_small">
+                        <label class="slds-form-element__label">BCC</label>
+                        <div class="address-row">
+
+                            <template for:each={emailBCCList} for:item="addr">
+                                <lightning-pill
+                                    key={addr}
+                                    name={addr}
+                                    label={addr}
+                                    onremove={removeBCC}>
+                                </lightning-pill>
+                            </template>
+
+                            <lightning-input
+                                class="address-input"
+                                variant="label-hidden"
+                                placeholder="Add BCC"
+                                value={emailBCCInput}
+                                onchange={handleBCCInputChange}
+                                onkeydown={handleBCCKeydown}>
+                            </lightning-input>
+                        </div>
+                    </div>
+
+                </template>
+
+                <!-- SUBJECT (CUSTOM WRAP, NOT LIGHTNING) -->
+                <div class="slds-m-top_small">
+                    <label class="slds-form-element__label">Subject</label>
+                    <div class="address-row">
+                        <input
+                            type="text"
+                            class="address-plain-input"
+                            placeholder="Email subject"
+                            value={emailSubject}
+                            onchange={handleEmailSubjectChange} />
+                    </div>
+                </div>
+
+                <!-- BODY (CUSTOM WRAP, NOT LIGHTNING) -->
+                <div class="slds-m-top_small">
+                    <label class="slds-form-element__label">Body</label>
+                    <div class="address-row address-row-textarea">
+                        <textarea
+                            class="address-textarea"
+                            placeholder="Write your message..."
+                            value={emailBody}
+                            onchange={handleEmailBodyChange}>
+                        </textarea>
+                    </div>
+                </div>
+
+                <div class="slds-m-top_small">
+                    <lightning-button
+                        variant="brand"
+                        label="Send Email"
+                        onclick={handleSendEmail}
+                        disabled={isSendDisabled}>
+                    </lightning-button>
+                </div>
+
+                <hr class="slds-m-vertical_large" />
+
+                <!-- ================================================= -->
+                <!-- CASE DETAILS -->
+                <!-- ================================================= -->
+                <h2 class="section-header">Case Details</h2>
+
+                <lightning-input
+                    label="Subject"
+                    value={caseRecord.Subject}
+                    data-field="Subject"
+                    onchange={handleChange}>
+                </lightning-input>
+
+                <lightning-textarea
+                    class="description-box"
+                    label="Description"
+                    value={caseRecord.Description}
+                    data-field="Description"
+                    onchange={handleChange}>
+                </lightning-textarea>
+
+                <lightning-combobox
+                    label="Status"
+                    data-field="Status"
+                    value={caseRecord.Status}
+                    options={statusOptions}
+                    class="slds-m-top_medium"
+                    onchange={handleChange}>
+                </lightning-combobox>
+
+                <lightning-combobox
+                    label="Priority"
+                    data-field="Priority"
+                    value={caseRecord.Priority}
+                    options={priorityOptions}
+                    class="slds-m-top_medium"
+                    onchange={handleChange}>
+                </lightning-combobox>
+
+                <lightning-combobox
+                    label="Type"
+                    data-field="Type"
+                    value={caseRecord.Type}
+                    options={typeOptions}
+                    class="slds-m-top_medium"
+                    onchange={handleChange}>
+                </lightning-combobox>
+
+                <lightning-combobox
+                    label="Case Reason"
+                    data-field="Reason"
+                    value={caseRecord.Reason}
+                    options={reasonOptions}
+                    class="slds-m-top_medium"
+                    onchange={handleChange}>
+                </lightning-combobox>
+
+                <!-- OWNER LOOKUP -->
+                <div class="slds-m-top_medium">
+                    <label class="slds-form-element__label">Owner</label>
+
+                    <div class="lookup-container">
+                        <input 
+                            type="text"
+                            class="lookup-input"
+                            value={ownerSearchTerm}
+                            oninput={handleOwnerTyping}
+                            placeholder="Search owner..."
+                        />
+
+                        <template if:true={showOwnerDropdown}>
+                            <ul class="lookup-dropdown">
+                                <template for:each={ownerSearchResults} for:item="o">
+                                    <li 
+                                        key={o.value}
+                                        class="lookup-option"
+                                        data-id={o.value}
+                                        data-label={o.label}
+                                        onclick={handleOwnerSelect}>
+                                        {o.label}
+                                    </li>
+                                </template>
+                            </ul>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="slds-m-top_large">
+                    <lightning-button label="Back" onclick={goBack}></lightning-button>
+
+                    <lightning-button
+                        class="slds-m-left_small"
+                        variant="brand"
+                        label="Save"
+                        onclick={saveCase}>
+                    </lightning-button>
+
+                    <template if:true={isSaving}>
+                        <lightning-spinner size="small" class="slds-m-left_small"></lightning-spinner>
+                    </template>
+                </div>
+
+                <hr class="slds-m-vertical_large" />
+
+                <!-- ================================================= -->
+                <!-- CASE HISTORY -->
+                <!-- ================================================= -->
+                <h2 class="section-header">Case History</h2>
+
+                <template if:true={isLoadingCaseHistory}>
+                    <lightning-spinner size="small"></lightning-spinner>
+                </template>
+
+                <template for:each={caseHistoryEntries} for:item="entry">
+                    <article key={entry.sourceId} class="email-card slds-box slds-m-bottom_small">
+
+                        <div class="slds-grid slds-grid_align-spread">
+                            <div>
+                                <strong>{entry.title}</strong>
+                                <div class="slds-text-body_small">
+                                    {entry.typeLabel} • {entry.createdByName}
+                                </div>
+                            </div>
+
+                            <lightning-formatted-date-time
+                                class="slds-text-body_small"
+                                value={entry.createdDate}
+                                year="numeric"
+                                month="short"
+                                day="2-digit"
+                                hour="2-digit"
+                                minute="2-digit">
+                            </lightning-formatted-date-time>
+                        </div>
+
+                        <pre class="email-body">{entry.body}</pre>
+
+                    </article>
+                </template>
+
+                <hr class="slds-m-vertical_large" />
+
+                <!-- ================================================= -->
+                <!-- EMAIL HISTORY -->
+                <!-- ================================================= -->
+                <h2 class="section-header">Email History</h2>
+
+                <template for:each={emailEntries} for:item="msg">
+                    <article key={msg.Id} class={msg.bubbleClass}>
+
+                        <div class="slds-grid slds-grid_align-spread">
+                            <div>
+                                <strong>{msg.Subject}</strong>
+                                <lightning-badge label={msg.directionLabel}
+                                                 class="slds-m-top_xx-small">
+                                </lightning-badge>
+
+                                <p class="slds-text-body_small wrap-text">
+                                    <b>From:</b> {msg.FromAddress}<br />
+                                    <b>To:</b> {msg.ToAddress}
+                                </p>
+
+                                <template if:true={msg.CcAddress}>
+                                    <p class="slds-text-body_small wrap-text">
+                                        <b>CC:</b> {msg.CcAddress}
+                                    </p>
+                                </template>
+                            </div>
+
+                            <lightning-formatted-date-time
+                                value={msg.CreatedDate}
+                                class="slds-text-body_small"
+                                year="numeric"
+                                month="short"
+                                day="2-digit"
+                                hour="2-digit"
+                                minute="2-digit">
+                            </lightning-formatted-date-time>
+                        </div>
+
+                        <pre class="email-body wrap-text">{msg.TextBody}</pre>
+
+                    </article>
+                </template>
+
+            </template>
+        </div>
+    </lightning-card>
+</template>

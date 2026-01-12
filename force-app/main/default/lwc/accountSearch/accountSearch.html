@@ -1,0 +1,28 @@
+<template>
+    <lightning-card title="Search Account" icon-name="standard:account">
+        <div class="slds-p-around_medium">
+            <!-- 🔍 Search input -->
+            <lightning-input
+                type="search"
+                label="Search Account by Name or ID"
+                placeholder="Enter account name or ID"
+                value={searchKey}
+                onchange={handleSearchChange}>
+            </lightning-input>
+  
+            <!-- 📋 Display results -->
+            <template if:true={accounts.length}>
+                <ul class="slds-box slds-m-top_small">
+                    <template for:each={accounts} for:item="acc">
+                        <li key={acc.Id}
+                            class="slds-p-around_x-small slds-border_bottom result-item"
+                            data-id={acc.Id}
+                            onclick={handleSelect}>
+                            <strong>{acc.Name}</strong>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+        </div>
+    </lightning-card>
+  </template>

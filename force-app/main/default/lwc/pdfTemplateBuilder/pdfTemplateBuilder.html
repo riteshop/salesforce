@@ -1,0 +1,67 @@
+<template>
+  <lightning-card title="Create New PDF Template" icon-name="custom:custom18">
+    <div class="slds-p-around_medium">
+        
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Saving..."></lightning-spinner>
+        </template>
+
+        <lightning-input 
+            label="Template Name" 
+            value={name} 
+            onchange={handleNameChange} 
+            required 
+            class="slds-m-bottom_medium">
+        </lightning-input>
+
+        <div class="slds-form-element slds-m-bottom_medium dropdown-container">
+            <lightning-input 
+                type="search"
+                label="Source Object" 
+                value={selectedObjectLabel}
+                placeholder="Search Object..." 
+                onchange={handleSearchChange}
+                onfocus={handleSearchFocus}
+                onblur={handleSearchBlur}
+                required>
+            </lightning-input>
+
+            <template if:true={isDropdownOpen}>
+                <div class="dropdown-list">
+                    <template for:each={filteredOptions} for:item="opt">
+                        <div key={opt.value} 
+                             class="dropdown-item" 
+                             data-value={opt.value} 
+                             data-label={opt.label} 
+                             onmousedown={handleOptionSelect}> <!-- Using mousedown to fire before blur -->
+                            {opt.label} <span class="slds-text-color_weak slds-text-body_small">({opt.value})</span>
+                        </div>
+                    </template>
+                    <template if:false={filteredOptions.length}>
+                        <div class="slds-p-around_small slds-text-color_weak">No matches found</div>
+                    </template>
+                </div>
+            </template>
+        </div>
+
+        <lightning-input
+            type="file"
+            label="Upload PDF Form"
+            accept=".pdf"
+            onchange={handleFileChange}
+            required
+            class="slds-m-bottom_large">
+        </lightning-input>
+
+        <div class="slds-align_absolute-center">
+            <lightning-button 
+                variant="brand" 
+                label="Create & Edit" 
+                onclick={handleSave}
+                disabled={isSaveDisabled}>
+            </lightning-button>
+        </div>
+
+    </div>
+  </lightning-card>
+</template>

@@ -1,0 +1,32 @@
+<template>
+    <lightning-card title="Related Ticket" icon-name="standard:related_list">
+
+        <template if:true={hasChildren}>
+            <div class="ticket-list">
+                <template for:each={children} for:item="c">
+                    <div key={c.Id} class="ticket-item">
+                        <div class="ticket-header">
+                            <strong>{c.ObjectType}</strong>
+                        </div>
+
+                        <a href="javascript:void(0);"
+                           data-id={c.Id}
+                           onclick={navigate}
+                           class="ticket-link">
+                           {c.Name}
+                        </a>
+
+                        <div class="ticket-date">
+                            Created: {c.CreatedDate}
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <template if:false={hasChildren}>
+            <p class="slds-p-around_small">No related tickets found.</p>
+        </template>
+
+    </lightning-card>
+</template>

@@ -1,0 +1,55 @@
+<template>
+    <lightning-card title="PDF Preview" icon-name="doctype:pdf">
+
+        <!-- LOADING -->
+        <template if:true={isLoading}>
+            <div class="center">
+                <lightning-spinner size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- ERROR -->
+        <template if:true={errorMessage}>
+            <div class="error-text">{errorMessage}</div>
+        </template>
+
+        <!-- TOOLBAR + CANVAS -->
+        <template if:true={hasPdf}>
+            <div class="toolbar">
+
+                <div class="toolbar-left">
+                    <lightning-button-icon icon-name="utility:chevronleft" alternative-text="Previous page"
+                        onclick={handlePrev}>
+                    </lightning-button-icon>
+
+                    <span class="page-label">Page {pageNumber} / {pageCount}</span>
+
+                    <lightning-button-icon icon-name="utility:chevronright" alternative-text="Next page"
+                        onclick={handleNext}>
+                    </lightning-button-icon>
+                </div>
+
+                <div class="toolbar-right">
+                    <lightning-button-icon icon-name="utility:zoomout" alternative-text="Zoom out"
+                        onclick={handleZoomOut}>
+                    </lightning-button-icon>
+
+                    <span class="zoom-label">{zoomDisplay}</span>
+
+                    <lightning-button-icon icon-name="utility:zoomin" alternative-text="Zoom in" onclick={handleZoomIn}>
+                    </lightning-button-icon>
+                </div>
+            </div>
+
+            <div class="canvas-wrapper">
+                <canvas class="pdf-canvas"></canvas>
+            </div>
+        </template>
+
+        <!-- NO FILE -->
+        <template if:false={hasPdf}>
+            <div class="no-file">No PDF attached to this Document Request.</div>
+        </template>
+
+    </lightning-card>
+</template>

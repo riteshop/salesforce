@@ -1,0 +1,26 @@
+.ticket-list {
+    padding: 10px;
+}
+
+.ticket-item {
+    border-bottom: 1px solid #e5e5e5;
+    padding: 10px 0;
+}
+
+.ticket-link {
+    font-size: 14px;
+    color: #0070d2;
+    cursor: pointer;
+    display: block;
+    margin-top: 3px;
+}
+
+.ticket-header {
+    color: #444;
+    font-size: 12px;
+}
+
+.ticket-date {
+    font-size: 11px;
+    color: #888;
+}

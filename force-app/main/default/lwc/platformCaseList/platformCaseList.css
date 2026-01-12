@@ -1,0 +1,27 @@
+.lookup-container {
+    position: relative;
+}
+
+.lookup-dropdown {
+    position: absolute;
+    width: 100%;
+    background: white;
+    border: 1px solid #d8dde6;
+    border-radius: 4px;
+    max-height: 180px;
+    overflow-y: auto;
+    z-index: 9999;
+}
+
+.lookup-option {
+    padding: 0.5rem;
+    cursor: pointer;
+}
+
+.lookup-option:hover {
+    background: #f4f6f9;
+}
+.description-box {
+    --slds-c-textarea-sizing-min-height: 100px;
+    --slds-c-textarea-sizing-height: 100px;
+}

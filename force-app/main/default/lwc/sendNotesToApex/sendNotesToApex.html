@@ -1,0 +1,15 @@
+<template>
+    <lightning-card title="AI Note Summary" icon-name="utility:magicwand">
+        <div class="slds-p-around_medium">
+            <template if:true={summaryText}>
+                <p style="font-size: 0.85rem; line-height: 1.4; color: #444; font-weight: 400;">
+                    {summaryText}
+                </p>
+            </template>
+
+            <template if:false={summaryText}>
+                <p style="font-size: 0.8rem; color: #999;">Waiting for AWS response...</p>
+            </template>
+        </div>
+    </lightning-card>
+</template>

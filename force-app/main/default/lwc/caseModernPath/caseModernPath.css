@@ -1,0 +1,120 @@
+/* ================================
+   CONTAINER
+   ================================ */
+.modern-path {
+    background: #ffffff;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.modern-path__track {
+    display: flex;
+    align-items: flex-start;
+}
+
+/* ================================
+   BASE STEP
+   ================================ */
+.modern-path .path-step {
+    position: relative;
+    flex: 1;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #000000;
+    padding-top: 0.25rem;
+    cursor: pointer;
+}
+
+/* Disable pointer on current step */
+.modern-path .path-step--current {
+    cursor: default;
+}
+
+/* ================================
+   CONNECTOR LINE
+   ================================ */
+.modern-path .path-step::before {
+    content: '';
+    position: absolute;
+    top: 11px;
+    left: -50%;
+    right: 50%;
+    height: 2px;
+    background: #d1d5db; /* light gray */
+    z-index: 1;
+}
+
+.modern-path .path-step:first-child::before {
+    content: none;
+}
+
+/* Color the line leading into completed AND current steps */
+.modern-path .path-step--completed::before,
+.modern-path .path-step--current::before {
+    background: #374151; /* dark gray */
+}
+
+/* ================================
+   CIRCLE
+   ================================ */
+.modern-path .path-step__circle {
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    border: 2px solid #374151; /* dark gray */
+    background: #ffffff;       /* empty */
+    margin: 0 auto 4px auto;
+    position: relative;
+    z-index: 2;
+    transition: all 0.2s ease;
+}
+
+/* ================================
+   STATES
+   ================================ */
+
+/* Upcoming = empty circle */
+.modern-path .path-step--upcoming .path-step__circle {
+    background: #ffffff;
+}
+
+/* Current = filled */
+.modern-path .path-step--current .path-step__circle {
+    background: #374151;
+}
+
+/* Completed = filled */
+.modern-path .path-step--completed .path-step__circle {
+    background: #374151;
+}
+
+/* ================================
+   HOVER (optional, subtle)
+   ================================ */
+.modern-path .path-step:not(.path-step--current):hover .path-step__circle {
+    transform: scale(1.1);
+}
+
+.confirm-container {
+    margin-top: 1.2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem; /* space between Confirm / Cancel */
+}
+
+/* ================================
+   SELECTED (PRE-CONFIRM)
+   ================================ */
+.modern-path .path-step--selected .path-step__circle {
+    border-width: 3px;              /* bolder ring */
+    transform: scale(1.15);         /* slightly larger */
+    box-shadow: 0 0 0 2px rgba(55, 65, 81, 0.25); /* subtle halo */
+}
+
+.path-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+}

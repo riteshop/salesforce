@@ -1,0 +1,69 @@
+<template>
+    <lightning-card title="Document Request Details" icon-name="custom:custom63">
+        <div class="panel-body">
+
+            <!-- HEADER ROW -->
+            <div class="row">
+                <div class="col">
+                    <label class="field-label">Document Request Name</label>
+                    <div class="field-value">{name}</div>
+                </div>
+                <div class="col">
+                    <label class="field-label">Request Type</label>
+                    <div class="field-value">{requestType}</div>
+                </div>
+            </div>
+
+            <!-- DESCRIPTION -->
+            <div class="col-full">
+                <label class="field-label">Request Description</label>
+            
+                <lightning-textarea
+                    value={description}
+                    onchange={handleDescriptionTyping}
+                    placeholder="Enter a description..."
+                    class="description-input"
+                ></lightning-textarea>
+            
+                <template if:true={showSaveButton}>
+                    <div class="description-save-container">
+                        <lightning-button
+                            variant="brand"
+                            label="Save Description"
+                            onclick={saveDescription}
+                        ></lightning-button>
+                    </div>
+                </template>
+            </div>
+
+            <!-- REQUESTED + APPROVER -->
+            <div class="row">
+                <div class="col">
+                    
+                    <c-document-request-approver-lookup record-id={recordId}></c-document-request-approver-lookup>
+                </div>
+            </div>
+
+            <!-- DUE DATE -->
+            <div class="row">
+                <div class="col">
+                    <label class="field-label">Due Date</label>
+                    <div class="field-value">{dueDate}</div>
+                </div>
+            </div>
+
+            <!-- AUDIT INFORMATION -->
+            <div class="row audit">
+                <div class="col">
+                    <label class="field-label">Created By</label>
+                    <div class="field-value">{createdBy}</div>
+                </div>
+                <div class="col">
+                    <label class="field-label">Last Modified By</label>
+                    <div class="field-value">{lastModifiedBy}</div>
+                </div>
+            </div>
+
+        </div>
+    </lightning-card>
+</template>

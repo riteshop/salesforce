@@ -1,0 +1,33 @@
+.card {
+    background: white;
+    border-radius: 14px;
+    padding: 18px 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.11);
+    cursor: pointer;
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+    border: 1px solid #e5e5e5;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+}
+
+.title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #4b4b4b;
+    margin-bottom: 6px;
+}
+
+.number {
+    font-size: 2.75rem;
+    font-weight: 700;
+    color: #C22;   /* Salesforce red-style metric */
+    margin: 6px 0;
+}
+
+.sub {
+    font-size: 0.75rem;
+    color: #7a7a7a;
+}

@@ -1,0 +1,30 @@
+.previewBox {
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  background: #fafafa;
+  min-height: 140px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* THUMBNAIL STYLES */
+.thumbnail-container {
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.thumbnail-container:hover {
+    border-color: #0070d2;
+    box-shadow: 0 0 8px rgba(0, 112, 210, 0.3);
+}
+
+.thumbnailCanvas {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}

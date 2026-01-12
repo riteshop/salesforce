@@ -1,0 +1,207 @@
+.modern-path {
+    background: #ffffff;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.modern-path__track {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+}
+
+/* Base step */
+.path-step {
+    position: relative;
+    flex: 1;
+    text-align: center;
+    font-size: 0.75rem;
+    color: #6b7280;
+    /* gray-500 */
+    padding-top: 0.25rem;
+    cursor: pointer;
+}
+
+/* Hover effect for selectable steps (not current) */
+.path-step:not(.path-step--current):hover .path-step__circle {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 2px #9ca3af;
+    /* gray-400 outline */
+}
+
+/* Current step should not be hoverable */
+.path-step--current {
+    cursor: default;
+}
+
+/* Selected state (before confirmation) */
+.path-step--selected .path-step__circle {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 3px #3b82f6;
+    /* blue-500 outline */
+}
+
+/* Connector line between steps */
+.path-step::before {
+    content: '';
+    position: absolute;
+    top: 11px;
+    /* vertically aligns with circle center */
+    left: -50%;
+    right: 50%;
+    height: 2px;
+    background: #e5e7eb;
+    /* gray-200 */
+    z-index: 1;
+}
+
+.path-step:first-child::before {
+    content: none;
+}
+
+/* Circle */
+.path-step__circle {
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    border: 2px solid #d1d5db;
+    /* gray-300 */
+    background: #ffffff;
+    margin: 0 auto 4px auto;
+    position: relative;
+    z-index: 2;
+    transition: all 0.2s ease;
+}
+
+/* Label */
+.path-step__label {
+    margin-top: 0.1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* === STATE COLORS === */
+
+/* Completed (before current, non-Approved/Rejected) */
+.path-step--completed .path-step__circle {
+    border-color: #4b5563;
+    /* gray-700 */
+    background: #4b5563;
+}
+
+.path-step--completed::before {
+    background: #4b5563;
+}
+
+.path-step--completed .path-step__label {
+    color: #000000;
+    /* black */
+}
+
+/* Upcoming (future) */
+.path-step--upcoming .path-step__circle {
+    border-color: #d1d5db;
+    /* gray-300 */
+    background: #ffffff;
+}
+
+.path-step--upcoming::before {
+    background: #e5e7eb;
+    /* gray-200 */
+}
+
+.path-step--upcoming .path-step__label {
+    color: #000000;
+    /* black */
+}
+
+/* Current (non-terminal, e.g., New / Pending / Pending Approval) */
+.path-step--current .path-step__circle {
+    border-color: #2563eb;
+    /* blue-600 */
+    background: #2563eb;
+}
+
+.path-step--current::before {
+    background: #2563eb;
+}
+
+.path-step--current .path-step__label {
+    color: #000000;
+    /* black */
+}
+
+/* Rejected (always red) */
+.path-step--rejected .path-step__circle {
+    border-color: #dc2626;
+    /* red-600 */
+    background: #dc2626;
+}
+
+.path-step--rejected::before {
+    background: #fecaca;
+    /* red-200 */
+}
+
+.path-step--rejected .path-step__label {
+    color: #000000;
+    /* black */
+    font-weight: 600;
+}
+
+/* Approved (always green) */
+.path-step--approved .path-step__circle {
+    border-color: #16a34a;
+    /* green-600 */
+    background: #16a34a;
+}
+
+.path-step--approved::before {
+    background: #bbf7d0;
+    /* green-200 */
+}
+
+.path-step--approved .path-step__label {
+    color: #000000;
+    /* black */
+    font-weight: 600;
+}
+
+/* --- Upcoming Rejected (future state, should be gray) --- */
+.path-step--upcoming-rejected .path-step__circle {
+    border-color: #d1d5db;
+    background: #ffffff;
+}
+
+.path-step--upcoming-rejected::before {
+    background: #e5e7eb;
+}
+
+.path-step--upcoming-rejected .path-step__label {
+    color: #000000;
+    /* black */
+}
+
+/* --- Upcoming Approved (future state, should be gray) --- */
+.path-step--upcoming-approved .path-step__circle {
+    border-color: #d1d5db;
+    background: #ffffff;
+}
+
+.path-step--upcoming-approved::before {
+    background: #e5e7eb;
+}
+
+.path-step--upcoming-approved .path-step__label {
+    color: #000000;
+    /* black */
+}
+
+
+
+.confirm-container {
+    margin-top: 1.2rem;
+    text-align: center;
+}

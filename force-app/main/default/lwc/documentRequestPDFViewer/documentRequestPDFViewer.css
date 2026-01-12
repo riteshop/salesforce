@@ -1,0 +1,45 @@
+.center {
+    text-align: center;
+    padding: 1rem;
+}
+
+.error-text {
+    color: #b91c1c;
+    font-size: 0.9rem;
+    padding: 1rem;
+    text-align: center;
+}
+
+.no-file {
+    padding: 1rem;
+    text-align: center;
+    color: #6b7280;
+}
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    background: #f3f4f6;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.toolbar-left,
+.toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.canvas-wrapper {
+    padding: 1rem;
+    overflow: auto;
+    background: #fafafa;
+}
+
+.pdf-canvas {
+    display: block;
+    margin: 0 auto;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}

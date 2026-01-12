@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>60.0</apiVersion>
+    <isExposed>true</isExposed>
+
+    <masterLabel>Platform Case List</masterLabel>
+
+    <targets>
+        <target>lightning__AppPage</target>
+        <target>lightning__HomePage</target>
+        <target>lightning__RecordPage</target>
+    </targets>
+
+    <!-- Optional: Expose properties to app builder if you want in future -->
+    <!--
+    <targetConfigs>
+        <targetConfig targets="lightning__AppPage,lightning__HomePage,lightning__RecordPage">
+            <property name="pageSize" type="Integer" default="50" label="Number of Cases Per Page"/>
+        </targetConfig>
+    </targetConfigs>
+    -->
+</LightningComponentBundle>

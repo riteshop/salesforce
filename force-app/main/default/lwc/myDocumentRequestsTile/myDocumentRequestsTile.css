@@ -1,0 +1,24 @@
+.tile {
+    background: white;
+    padding: 14px;
+    border-radius: 12px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.tile:hover {
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.label {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 6px;
+}
+
+.count {
+    font-size: 40px;
+    font-weight: bold;
+    color: #e84c3d;
+}

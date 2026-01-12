@@ -1,0 +1,31 @@
+<template>
+    <lightning-card title="Search Contact or Provider" icon-name="utility:search">
+        <div class="slds-p-around_medium">
+  
+            <!-- 🔍 Search Input -->
+            <lightning-input
+                type="search"
+                label="Search by Name"
+                placeholder="Enter Contact or Provider name"
+                value={searchKey}
+                onchange={handleSearchChange}>
+            </lightning-input>
+  
+            <!-- 📋 Search Results -->
+            <template if:true={results.length}>
+                <ul class="slds-box slds-m-top_small">
+                    <template for:each={results} for:item="r">
+                        <li key={r.Id}
+                            class="result-item slds-p-around_x-small slds-border_bottom"
+                            data-id={r.Id}
+                            onclick={handleSelect}>
+                            <div class="record-row">
+                                <span class="record-name"><strong>{r.Name}</strong></span>
+                            </div>
+                        </li>
+                    </template>
+                </ul>
+            </template>
+        </div>
+    </lightning-card>
+  </template>

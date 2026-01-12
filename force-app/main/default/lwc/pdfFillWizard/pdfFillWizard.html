@@ -1,0 +1,200 @@
+<template>
+  <lightning-card>
+    <div slot="title" class="slds-text-heading_large" style="font-weight: 700;">
+        Fill & Download PDFs
+    </div>
+    <div class="slds-p-around_medium">
+
+      <template if:true={isStepTemplates}>
+        <template if:true={isLoadingTemplates}>
+            <lightning-spinner alternative-text="Loading templates"></lightning-spinner>
+        </template>
+        
+        <!-- Show content only when loaded -->
+        <template if:false={isLoadingTemplates}>
+             <!-- Search Bar -->
+             <div class="slds-m-bottom_small slds-grid">
+                <div class="slds-col slds-size_1-of-3">
+                    <lightning-input 
+                        type="search" 
+                        placeholder="Search templates..." 
+                        onchange={handleTemplateSearch}
+                        class="slds-m-bottom_x-small">
+                    </lightning-input>
+                </div>
+            </div>
+
+            <!-- Table or No Results -->
+            <template if:true={templates.length}>
+              <div style="height: 75vh;">
+                <lightning-datatable
+                    key-field="id"
+                    data={templates}
+                    columns={templateColumns}
+                    onrowaction={handleTemplateRowAction}
+                    sorted-by={sortedBy}
+                    sorted-direction={sortDirection}
+                    onsort={handleTemplateSort}
+                    hide-checkbox-column>
+                </lightning-datatable>
+              </div>
+            </template>
+            <template if:false={templates.length}>
+                <div class="slds-text-align_center slds-m-top_large slds-text-color_weak">
+                    No templates found matching your search.
+                </div>
+            </template>
+        </template>
+      </template>
+
+      <template if:true={isStepRecords}>
+        
+        <div class="slds-m-bottom_small slds-grid slds-grid_vertical-align-center">
+          <lightning-button-icon icon-name="utility:back" alternative-text="Back" onclick={goBack} class="slds-m-right_small"></lightning-button-icon>
+          <span class="slds-text-heading_small">{selectedTemplateName}</span>
+        </div>
+
+        <div class="slds-grid slds-wrap slds-gutters" style="position:relative;">
+          
+          <template if:true={templateInitializing}>
+              <lightning-spinner alternative-text="Initializing..." variant="brand" size="medium"></lightning-spinner>
+          </template>
+
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-m-bottom_medium">
+            <div class="previewBox thumbnail-container slds-m-bottom_medium" onclick={openPdfModal} title="Click to view full PDF">
+              <template if:true={previewLoading}>
+                <lightning-spinner alternative-text="Loading preview"></lightning-spinner>
+              </template>
+              <canvas class="thumbnailCanvas" lwc:dom="manual"></canvas>
+              <template if:true={previewError}>
+                <div class="slds-text-color_error slds-m-top_small">{previewError}</div>
+              </template>
+            </div>
+
+            <div class="slds-box slds-theme_default" style="padding: 0;">
+                <div class="slds-p-around_small slds-border_bottom">
+                    <h3 class="slds-text-title_caps">{activeMappingsLabel}</h3>
+                </div>
+                <div style="height: 300px;">
+                    <template if:true={hasMappings}>
+                        <lightning-datatable 
+                            key-field="id" 
+                            data={mappingData} 
+                            columns={mappingColumns} 
+                            hide-checkbox-column
+                            sorted-by={mappingSortedBy}
+                            sorted-direction={mappingSortDirection}
+                            onsort={handleMappingSort}>
+                        </lightning-datatable>
+                    </template>
+                    <template if:false={hasMappings}>
+                         <div class="slds-text-color_weak slds-text-align_center slds-p-vertical_medium">No active mappings found.</div>
+                    </template>
+                </div>
+            </div>
+          </div>
+
+          <div class="slds-col slds-size_1-of-1 slds-medium-size_9-of-12 slds-m-bottom_medium">
+            
+            <div class="slds-grid slds-grid_vertical-align-end slds-gutters_x-small">
+                <div class="slds-col slds-grow">
+                    <lightning-input 
+                        type="search" 
+                        label={searchLabel} 
+                        value={recordSearch} 
+                        onchange={handleRecordSearchChange} 
+                        placeholder="Type to search...">
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-no-flex">
+                    <lightning-button-icon 
+                        icon-name="utility:table" 
+                        variant="border-filled" 
+                        onclick={openColumnModal} 
+                        title="Select Columns">
+                    </lightning-button-icon>
+                </div>
+            </div>
+
+            <div class="slds-m-top_medium slds-box slds-theme_default" style="padding:0;">
+                <div class="slds-p-around_small slds-border_bottom slds-theme_shade">
+                    <h3 class="slds-text-heading_small">
+                        {tableTitle} <span class="slds-text-body_small slds-text-color_weak">({searchResults.length})</span>
+                    </h3>
+                </div>
+                <div style="height: 400px;">
+                    <lightning-datatable
+                        key-field="Id"  data={searchResults}
+                        columns={searchColumns}
+                        onrowselection={handleRowSelection}
+                        selected-rows={selectedRecordIds}
+                        sorted-by={recordSortedBy}
+                        sorted-direction={recordSortDirection}
+                        onsort={handleRecordSort}>
+                    </lightning-datatable>
+                </div>
+            </div>
+
+            <div class="slds-m-top_medium slds-grid slds-grid_align-end">
+              <lightning-button variant="brand" label="Fill & Download Selected" onclick={fillAndDownload} disabled={fillDisabled}></lightning-button>
+              <template if:true={filling}>
+                <lightning-spinner alternative-text="Filling PDFs"></lightning-spinner>
+              </template>
+            </div>
+          </div>
+
+        </div>
+      </template>
+
+      <template if:true={isModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium" aria-modal="true">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closePdfModal}>
+                        <lightning-icon icon-name="utility:close" variant="inverse" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_medium">{selectedTemplateName} - Preview</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" style="background: #eef1f6;">
+                    <div class="fullPdfScrollContainer" lwc:dom="manual" style="display: flex; flex-direction: column; align-items: center;"></div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Close" onclick={closePdfModal}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+      </template>
+
+      <template if:true={isColumnModalOpen}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small" aria-modal="true">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" onclick={closeColumnModal}>
+                        <lightning-icon icon-name="utility:close" variant="inverse" size="small"></lightning-icon>
+                    </button>
+                    <h2 class="slds-text-heading_medium">Select Fields to Display</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium">
+                    <lightning-dual-listbox
+                        name="columnSelector"
+                        label="Select Fields"
+                        source-label="Available"
+                        selected-label="Visible"
+                        options={allAvailableColumnOptions}
+                        value={activeColumnValues}
+                        onchange={handleColumnChange}>
+                    </lightning-dual-listbox>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={closeColumnModal} class="slds-m-right_x-small"></lightning-button>
+                    <lightning-button variant="brand" label="Save" onclick={saveColumnSelection}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+      </template>
+
+    </div>
+  </lightning-card>
+</template>

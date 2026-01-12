@@ -1,0 +1,183 @@
+<template>
+  <div class="layout" onmousemove={handleMouseMove} onmouseup={handleMouseUp}>
+    <!-- LEFT PANE: PDF PREVIEW -->
+    <div class="pdfStage"> <!-- Flex Column -->
+       <!-- NEW HEADER (Left) -->
+       <div class="pdfHeader">
+          <div class="slds-text-heading_small slds-p-horizontal_small slds-p-vertical_x-small">
+              <strong>{headerTitle}</strong>
+          </div>
+       </div>
+
+       <!-- SCROLLABLE PDF CANVAS -->
+       <div class="pdfScrollContainer">
+           <template if:true={isLoading}>
+               <lightning-spinner alternative-text="Loading PDF..." size="medium"></lightning-spinner>
+           </template>
+           <div class="pdfInner">
+             <!-- Pages rendered here -->
+           </div>
+       </div>
+    </div>
+
+    <!-- RESIZER -->
+    <div class="resizer" onmousedown={handleResizerMouseDown}></div>
+
+    <!-- RIGHT PANE: FIELD MAPPING -->
+    <div class="fieldPane">
+      <div class="topActions">
+
+        <div class="btnRow slds-grid slds-grid_align-start"> <!-- Aligned Left -->
+          <!-- Header moved to left pane -->
+          <lightning-button 
+            label={saveLabel} 
+            variant="brand" 
+            onclick={save} 
+            disabled={saving}>
+          </lightning-button>
+        </div>
+        <div class="header-row">
+            <div>PDF Field</div>
+            <div>Mapped Value</div>
+            <div class="center-text">Search?</div>
+        </div>
+      </div>
+
+      <div class="scrollable-list">
+        <template for:each={fields} for:item="f">
+          <div key={f.name} class={f.rowClass} data-name={f.name} onclick={selectField}>
+            
+            <!-- HEADER: Always Visible -->
+            <div class="field-header">
+                <div class="header-main">
+                    <!-- Label Input -->
+                    <lightning-input
+                      variant="label-hidden"
+                      data-name={f.name}
+                      value={f.displayLabel}
+                      onchange={onLabelChange}
+                      onclick={stopProp}
+                      class="field-label-input">
+                    </lightning-input>
+                    <div class="fieldMeta">{f.name}</div>
+                </div>
+                
+                <div class="header-summary">
+                    <!-- Mapped Value (Standard Input for style control + Clear Button) -->
+                    <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+                        <lightning-button-icon
+                            icon-name="utility:close"
+                            variant="bare"
+                            alternative-text="Clear Mapping"
+                            onclick={onClearMapping}
+                            data-name={f.name}
+                            class="slds-input__icon slds-input__icon_right"
+                            title="Clear Mapping">
+                        </lightning-button-icon>
+                        <input 
+                            type="text" 
+                            disabled 
+                            value={f.mappedValue} 
+                            title={f.mappedValue} 
+                            class="slds-input white-disabled-input" />
+                    </div>
+                    <template if:false={f.expanded}>
+                        <div class="fieldMeta">Click to edit</div>
+                    </template>
+                </div>
+
+                <div class="header-action">
+                     <lightning-input
+                      type="checkbox"
+                      variant="label-hidden"
+                      data-name={f.name}
+                      checked={f.showInSearch}
+                      onchange={onShowInSearchChange}
+                      onclick={stopProp}
+                      title="Show in Search Wizard">
+                    </lightning-input>
+                </div>
+            </div>
+
+            <!-- BODY: Only if Expanded -->
+            <template if:true={f.expanded}>
+                <div class="field-body">
+                    <!-- SOURCE TYPE TOGGLE -->
+                    <div class="slds-p-horizontal_small slds-p-bottom_x-small">
+                        <lightning-radio-group
+                            name={f.uniqueRadioName}
+                            label="Value Source"
+                            options={sourceOptions}
+                            value={f.valueSourceType}
+                            data-name={f.name}
+                            onchange={handleSourceTypeChange}
+                            onclick={stopProp} 
+                            type="button"
+                            variant="label-hidden">
+                        </lightning-radio-group>
+                    </div>
+
+                    <!-- 1) CONSTANT VALUE INPUT -->
+                    <template if:true={f.isConstant}>
+                        <div class="slds-p-around_small">
+                            <lightning-textarea
+                                label="Constant Value"
+                                value={f.constantValue}
+                                data-name={f.name}
+                                onchange={handleConstantValueChange}
+                                onclick={stopProp}
+                                placeholder="Enter a static value...">
+                            </lightning-textarea>
+                        </div>
+                    </template>
+
+                    <!-- 2) FIELD FINDER (Miller Columns) -->
+                    <template if:false={f.isConstant}>
+                        <div class="finder-container">
+                            <template for:each={f.levels} for:item="lvl">
+                                <div class="finder-column" key={lvl.id}>
+                                    <!-- Search Header -->
+                                    <div class="finder-search" onmousedown={stopProp}>
+                                         <lightning-input 
+                                            type="search" 
+                                            variant="label-hidden" 
+                                            data-field={f.name}
+                                            data-level-index={lvl.index}
+                                            value={lvl.searchTerm}
+                                            onchange={onColumnSearch}
+                                            placeholder="Search..."
+                                            class="compact-search">
+                                         </lightning-input>
+                                    </div>
+                                    <div class="finder-list">
+                                        <template for:each={lvl.displayOptions} for:item="opt">
+                                            <div key={opt.value} 
+                                                class={opt.class}
+                                                data-level-index={lvl.index}
+                                                data-value={opt.value}
+                                                data-field={f.name}
+                                                onclick={onLevelItemClick}>
+                                                <span>{opt.label}</span>
+                                                <template if:true={opt.isRef}>
+                                                    <span class="finder-arrow">▶</span>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        <template if:true={lvl.loading}>
+                                            <div class="slds-p-around_small">
+                                                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</template>

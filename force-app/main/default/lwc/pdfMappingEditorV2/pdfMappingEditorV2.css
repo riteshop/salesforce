@@ -1,0 +1,253 @@
+.layout {
+  display: flex;
+  width: 100%;
+  height: 80vh;
+  gap: 0;
+  padding: 0.75rem;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.pdfStage {
+  height: 100%;
+  /* Removed overflow:auto here, moved to inner container */
+  border: 1px solid #ddd;
+  background: white;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdfHeader {
+    border-bottom: 1px solid #eee;
+    background: #f8f8f8;
+    flex-shrink: 0;
+}
+
+.pdfScrollContainer {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+    background: #fff;
+}
+
+.resizer {
+  width: 8px;
+  cursor: col-resize;
+  background: #f3f3f3;
+  border-left: 1px solid #ddd;
+  border-right: 1px solid #ddd;
+  flex-shrink: 0;
+}
+
+.fieldPane {
+  flex-grow: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ddd;
+  background: white;
+  overflow: hidden;
+  min-width: 300px;
+}
+
+.topActions {
+  background: white;
+  z-index: 10;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.btnRow { padding: 0.75rem; }
+
+/* Main Headers */
+.header-row {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0.5rem; /* Adjusted padding to match row content */
+    background: #f3f3f3;
+    border-top: 1px solid #e5e5e5;
+    font-weight: 700;
+    font-size: 0.75rem;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Match the flex items of the content rows */
+.header-row > div:nth-child(1) {
+    flex: 1; /* Matches .header-main */
+    padding-left: 0.5rem; /* Match input padding */
+}
+
+.header-row > div:nth-child(2) {
+    flex: 1; /* Matches .header-summary */
+    padding-left: 1rem;
+}
+
+.header-row > div:nth-child(3) {
+    width: 60px; /* Matches action + checkbox area approx */
+    text-align: center;
+}
+
+.scrollable-list {
+  overflow-y: auto;
+  flex-grow: 1; 
+  padding: 0.5rem;
+}
+
+.fieldRow {
+  border: 1px solid #eee;
+  border-radius: 4px;
+  margin-bottom: 0.25rem;
+  cursor: pointer;
+  background: #fff;
+  transition: all 0.2s;
+}
+
+.fieldRow:hover {
+    border-color: #ccc;
+}
+
+.fieldRow.selected {
+  border-color: #1b96ff;
+  background-color: #f0f8ff;
+  box-shadow: 0 0 0 1px #1b96ff inset;
+}
+
+/* Accordion Header */
+.field-header {
+    display: flex;
+    align-items: flex-start; /* Changed from center to fix alignment issues */
+    padding: 0.5rem;
+    min-height: 40px;
+}
+
+.header-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.header-summary {
+    flex: 1;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Force the disabled input to look white/standard but non-interactive */
+.white-disabled-input {
+    background-color: #ffffff !important;
+    color: #080707 !important;
+    border-color: #dddbda !important; 
+    border: 1px solid #dddbda !important;
+    cursor: default !important;
+    opacity: 1 !important; /* Fixes potential opacity fade on disabled inputs */
+    padding-right: 2rem !important; /* Make room for the icon */
+}
+
+/* Ensure the icon inside the disabled input is clickable */
+.slds-input__icon {
+    pointer-events: auto !important;
+    z-index: 10;
+}
+
+/* Obsolete mapping-summary-text removed */
+
+.header-action {
+    width: 30px;
+    text-align: center;
+}
+
+.fieldMeta {
+  font-size: 0.7rem;
+  color: #999;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Accordion Body */
+.field-body {
+    border-top: 1px solid #e5e5e5;
+    background: #fafafa;
+    padding: 0.5rem;
+}
+
+/* Miller Columns / Finder */
+.finder-container {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    border: 1px solid #c9c9c9;
+    border-radius: 4px;
+    background: white;
+    height: 250px; /* Slightly taller for search */
+    width: 100%;
+}
+
+.finder-column {
+    min-width: 200px;
+    max-width: 200px;
+    border-right: 1px solid #e5e5e5;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+.finder-search {
+    padding: 4px 8px;
+    border-bottom: 1px solid #e5e5e5;
+    background: #f8f8f8;
+    flex-shrink: 0;
+}
+
+/* Compact search input */
+.compact-search {
+    --slds-c-input-spacing-vertical-start: 0;
+}
+
+.finder-list {
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.finder-item {
+    padding: 6px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #080707;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.finder-item:hover {
+    background-color: #f3f3f3;
+}
+
+.finder-item.selected {
+    background-color: #0176d3;
+    color: white;
+}
+
+.finder-arrow {
+    font-size: 10px;
+    margin-left: 8px;
+    color: #706e6b;
+}
+
+.finder-item.selected .finder-arrow {
+    color: white;
+}
+
+/* Scrollbar niceness */
+.finder-container::-webkit-scrollbar { height: 8px; }
+.finder-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
+.finder-list::-webkit-scrollbar { width: 6px; }
+.finder-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }

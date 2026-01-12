@@ -1,0 +1,21 @@
+<template>
+  <lightning-quick-action-panel header="Download Adobe PDF">
+    <div class="slds-p-around_medium">
+      <template if:true={error}>
+        <div class="slds-text-color_error slds-m-bottom_small">{error}</div>
+      </template>
+
+      <lightning-button variant="brand"
+                        label="Generate & Download"
+                        onclick={handleClick}
+                        disabled={busy}>
+      </lightning-button>
+
+      <template if:true={busy}>
+        <div class="slds-m-top_small">
+          <lightning-spinner size="small"></lightning-spinner>
+        </div>
+      </template>
+    </div>
+  </lightning-quick-action-panel>
+</template>

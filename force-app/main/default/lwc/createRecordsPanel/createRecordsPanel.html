@@ -1,0 +1,64 @@
+<template>
+    <lightning-card title="Create Records" icon-name="utility:add">
+        <div class="slds-p-around_medium slds-align_absolute-center">
+
+            <!-- New Contact -->
+            <lightning-button 
+                label="New Contact" 
+                variant="neutral" 
+                icon-name="utility:user" 
+                onclick={handleCreateContact}>
+            </lightning-button>
+
+            <!-- New Account -->
+            <lightning-button 
+                label="New Account" 
+                variant="neutral" 
+                icon-name="utility:account" 
+                class="slds-m-left_small" 
+                onclick={toggleAccountOptions}>
+            </lightning-button>
+        </div>
+
+        <!-- Account Options Dropdown -->
+        <template if:true={showAccountOptions}>
+            <div class="slds-p-around_small slds-grid slds-wrap slds-align_absolute-center">
+                <lightning-button
+                    label="Referring Provider"
+                    variant="neutral"
+                    class="slds-m-around_small"
+                    data-type="Referring Provider"
+                    onclick={handleSelectAccountType}>
+                </lightning-button>
+
+                <lightning-button
+                    label="Organization"
+                    variant="neutral"
+                    class="slds-m-around_small"
+                    data-type="Organization"
+                    onclick={handleSelectAccountType}>
+                </lightning-button>
+
+                <lightning-button
+                    label="Office"
+                    variant="neutral"
+                    class="slds-m-around_small"
+                    data-type="Office"
+                    onclick={handleSelectAccountType}>
+                </lightning-button>
+
+                
+            </div>
+        </template>
+
+        <!-- Create Note -->
+        <div class="slds-p-around_medium slds-align_absolute-center">
+            <lightning-button 
+                label="Create Note" 
+                variant="brand" 
+                icon-name="utility:add" 
+                onclick={handleCreateNote}>
+            </lightning-button>
+        </div>
+    </lightning-card>
+</template>
