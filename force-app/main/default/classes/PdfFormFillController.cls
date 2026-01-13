@@ -62,8 +62,12 @@ public with sharing class PdfFormFillController {
          List<String> resultFields = new List<String>{'Name'};
          if (templateId == null) return resultFields;
          // Query mappings to see what fields are relevant
-         for (PDF_Mapping__c m : [SELECT Field_Path__c FROM PDF_Mapping__c WHERE Template__c = :templateId AND Show_in_Search__c = TRUE AND Active__c = TRUE]) {
-             if (String.isNotBlank(m.Field_Path__c)) resultFields.add(m.Field_Path__c);
+         for (PDF_Mapping__c m : [SELECT Field_Path__c, Value_Source_Type__c, Constant_Value__c FROM PDF_Mapping__c WHERE Template__c = :templateId AND Show_in_Search__c = TRUE AND Active__c = TRUE]) {
+             if (String.isNotBlank(m.Field_Path__c)) {
+                 resultFields.add(m.Field_Path__c);
+             } else if ((m.Value_Source_Type__c == 'ContextVariable' || (m.Value_Source_Type__c != null && m.Value_Source_Type__c.contains('Context'))) && String.isNotBlank(m.Constant_Value__c)) {
+                 resultFields.add(m.Constant_Value__c);
+             }
          }
          return resultFields;
     }
@@ -340,6 +344,7 @@ public with sharing class PdfFormFillController {
             Map<String,Object> formData = new Map<String,Object>();
 
             for (PDF_Mapping__c m : maps) {
+                System.debug('Mapping: ' + m.Pdf_Field_Name__c + ' | Type: ' + m.Value_Source_Type__c + ' | Const: ' + m.Constant_Value__c);
                 if (String.isBlank(m.Pdf_Field_Name__c)) continue;
 
                 if (m.Value_Source_Type__c == 'FieldPath') {
@@ -360,6 +365,23 @@ public with sharing class PdfFormFillController {
                     if (String.isBlank(m.Constant_Value__c)) continue;
                     System.debug('[PdfFormFill] Field: ' + m.Pdf_Field_Name__c + ' | Constant: ' + m.Constant_Value__c);
                     formData.put(m.Pdf_Field_Name__c, m.Constant_Value__c);
+
+                } else if (m.Value_Source_Type__c == 'ContextVariable') {
+                    if (String.isBlank(m.Constant_Value__c)) continue;
+                    String varName = m.Constant_Value__c;
+                    Object val = null;
+
+                    if (varName == 'CurrentUserName') {
+                        val = UserInfo.getName();
+                    } else if (varName == 'CurrentUserEmail') {
+                        val = UserInfo.getUserEmail();
+                    } else if (varName == 'CurrentDate') {
+                        val = Date.today().format();
+                    }
+
+                    if (val != null) {
+                         formData.put(m.Pdf_Field_Name__c, String.valueOf(val));
+                    }
                 }
             }
 

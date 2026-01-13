@@ -131,8 +131,25 @@
                         </div>
                     </template>
 
-                    <!-- 2) FIELD FINDER (Miller Columns) -->
+                    <!-- 2) CONTEXT VARIABLE INPUT -->
+                    <template if:true={f.isContextVariable}>
+                         <div class="slds-p-around_small">
+                             <lightning-combobox
+                                name="contextVar"
+                                label="Select Context Variable"
+                                value={f.constantValue}
+                                placeholder="Select Variable..."
+                                options={contextOptions}
+                                data-name={f.name}
+                                onchange={handleContextVarChange}
+                                onclick={stopProp}>
+                             </lightning-combobox>
+                         </div>
+                    </template>
+
+                    <!-- 3) FIELD FINDER (Miller Columns) -->
                     <template if:false={f.isConstant}>
+                        <template if:false={f.isContextVariable}>
                         <div class="finder-container">
                             <template for:each={f.levels} for:item="lvl">
                                 <div class="finder-column" key={lvl.id}>
@@ -172,6 +189,7 @@
                                 </div>
                             </template>
                         </div>
+                        </template>
                     </template>
                 </div>
             </template>

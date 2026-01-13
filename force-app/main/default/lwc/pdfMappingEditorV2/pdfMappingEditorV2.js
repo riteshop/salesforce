@@ -174,17 +174,17 @@ export default class PdfMappingEditorV2 extends LightningElement {
             
             const row = {
                 name: a.fieldName,
-                uniqueRadioName: 'valSource_' + a.fieldName, // Fix for radio group uniqueness
+                uniqueRadioName: 'valSource_' + a.fieldName,
                 displayLabel: prior?.displayLabel || a.fieldName,
                 page: p,
                 rect: a.rect,
                 mappingId: prior?.id || null,
-                // If it was constant, show that value, otherwise show path
-                mappedValue: (prior?.valueSourceType === 'Constant') ? (prior?.constantValue || '') : priorPath,
+                mappedValue: (prior?.valueSourceType === 'Constant' || prior?.valueSourceType === 'ContextVariable') ? (prior?.constantValue || '') : priorPath,
                 showInSearch: prior?.showInSearch || false,
                 valueSourceType: prior?.valueSourceType || 'FieldPath',
                 constantValue: prior?.constantValue || '',
                 isConstant: (prior?.valueSourceType === 'Constant'),
+                isContextVariable: (prior?.valueSourceType === 'ContextVariable'),
                 rowClass: 'fieldRow',
                 expanded: false,
                 levels: [] 
@@ -196,11 +196,6 @@ export default class PdfMappingEditorV2 extends LightningElement {
 
     this.fields = extracted;
     await Promise.all(this.fields.map(f => this.initMappingPath(f)));
-
-    // Removed auto-selection of the first field as per user request
-    // if (this.fields.length) {
-    //   this.selectFieldByName(this.fields[0].name);
-    // }
   }
 
   // ------------------------------------------------------------------
@@ -223,7 +218,6 @@ export default class PdfMappingEditorV2 extends LightningElement {
     let newLevels = [...row.levels];
 
     // 1. Mark selection in this level
-    //    We need to ensure we don't just change the object reference but invalidates the array
     const currentLevel = { ...newLevels[levelIndex] };
     
     if (currentLevel.selectedValue === itemValue) return; // already selected
@@ -264,7 +258,7 @@ export default class PdfMappingEditorV2 extends LightningElement {
         }
     }
     
-    // 5. Update the row state immediately (so UI updates selection)
+    // 5. Update the row state immediately
     const updatedRow = {
         ...row,
         levels: this.recalcItemClasses(newLevels),
@@ -315,7 +309,6 @@ export default class PdfMappingEditorV2 extends LightningElement {
           } else {
              // Logic: If it's a reference AND there is a next level, use relationshipName. 
              const isLast = (levels.indexOf(lvl) === levels.length - 1);
-             // Also check if next level has a selection or exists... actually, just check if we are stopping here.
              
              const isRef = (opt.type === 'REFERENCE' || opt.type === 'Reference');
              
@@ -448,35 +441,40 @@ export default class PdfMappingEditorV2 extends LightningElement {
       event.stopPropagation();
       const name = event.target.dataset.name;
       
-      // confirm logic if needed? for now just clear
-      
       this.fields = this.fields.map(f => {
           if (f.name === name) {
-              const baseApi = this.sourceObjectApiName || ''; // reset levels if needed
-              // Re-initialize this field mapping
               return { 
                   ...f, 
                   mappedValue: '', 
                   valueSourceType: 'FieldPath',
                   isConstant: false,
+                  isContextVariable: false,
                   constantValue: '',
-                  levels: [] // clearing levels resets the miller columns
+                  levels: [] 
               };
           }
           return f;
       });
       
-      // If we want to re-init the first level options immediately
       const field = this.fields.find(f => f.name === name);
       if (field) {
-          this.initMappingPath(field); // Re-load root options
+          this.initMappingPath(field); 
       }
   }
 
   get sourceOptions() {
       return [
           { label: 'Salesforce Field', value: 'FieldPath' },
-          { label: 'Constant Value', value: 'Constant' }
+          { label: 'Constant Value', value: 'Constant' },
+          { label: 'Context Variable', value: 'ContextVariable' }
+      ];
+  }
+
+  get contextOptions() {
+      return [
+          { label: 'Current User Name', value: 'CurrentUserName' },
+          { label: 'Current User Email', value: 'CurrentUserEmail' },
+          { label: 'Current Date', value: 'CurrentDate' }
       ];
   }
 
@@ -488,8 +486,8 @@ export default class PdfMappingEditorV2 extends LightningElement {
         id: f.mappingId,
         pdfFieldName: f.name,
         displayLabel: f.displayLabel,
-        valueSourceType: f.valueSourceType, // Dynamic
-        constantValue: f.constantValue,     // Dynamic
+        valueSourceType: f.valueSourceType,
+        constantValue: f.constantValue,
         fieldPath: f.mappedValue,
         showInSearch: f.showInSearch,
         active: true
@@ -509,12 +507,13 @@ export default class PdfMappingEditorV2 extends LightningElement {
       this.fields = this.fields.map(f => {
           if (f.name === name) {
               const isConstant = (val === 'Constant');
+              const isContext = (val === 'ContextVariable');
               return { 
                   ...f, 
                   valueSourceType: val,
                   isConstant: isConstant,
-                  // If switching to constant, show constant value; else show mapped path
-                  mappedValue: isConstant ? f.constantValue : this.computePathFromLevels(f.levels)
+                  isContextVariable: isContext,
+                  mappedValue: (isConstant || isContext) ? f.constantValue : this.computePathFromLevels(f.levels)
               };
           }
           return f;
@@ -529,7 +528,22 @@ export default class PdfMappingEditorV2 extends LightningElement {
               return { 
                   ...f, 
                   constantValue: val,
-                  // Update the display immediately
+                  mappedValue: val 
+              };
+          }
+          return f;
+      });
+  }
+  
+  // Reusing same handler for context variable change (different event payload type if combobox)
+  handleContextVarChange(event) {
+      const name = event.target.dataset.name;
+      const val = event.detail.value;
+      this.fields = this.fields.map(f => {
+          if (f.name === name) {
+              return { 
+                  ...f, 
+                  constantValue: val,
                   mappedValue: val 
               };
           }

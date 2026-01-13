@@ -43,8 +43,27 @@ const TEMPLATE_COLS = [
       typeAttributes: { year: 'numeric', month: 'short', day: '2-digit', hour: '2-digit', minute:'2-digit' }, sortable: true, cellAttributes: { alignment: 'left' } }
 ];
 
+import Id from '@salesforce/user/Id';
+import { getRecord } from 'lightning/uiRecordApi';
+import UserNameFIELD from '@salesforce/schema/User.Name';
+import UserEmailFIELD from '@salesforce/schema/User.Email';
+
 export default class PdfFillWizard extends LightningElement {
   @track step = 'templates'; 
+  
+  userId = Id;
+  _userInfo = {};
+
+  @wire(getRecord, { recordId: '$userId', fields: [UserNameFIELD, UserEmailFIELD] })
+  wiredUser({ error, data }) {
+      if (data) {
+          this._userInfo = {
+              Name: data.fields.Name.value,
+              Email: data.fields.Email.value
+          };
+      }
+  }
+
   @track templates = [];
   allTemplates = [];
   @track templateColumns = TEMPLATE_COLS;
@@ -270,7 +289,14 @@ export default class PdfFillWizard extends LightningElement {
         this._fieldOptionsMap = allOptionsMap;
 
         // 2. Ensure targeted defaults are present (even if not in Apex result)
-        this.targetFieldsApiNames.forEach(apiName => {
+        // Also ensure Context Variables (which have no sourceApi in mappingData but are valid columns) are added
+        const contextVars = (this.mappingData || [])
+            .filter(m => !m.sourceApi && (m.displayLabel && (m.displayLabel.startsWith('Current') || m.displayLabel === 'CurrentDate')))
+            .map(m => m.displayLabel);
+
+        const fieldsEnsure = [...this.targetFieldsApiNames, ...contextVars];
+
+        fieldsEnsure.forEach(apiName => {
             const apiLower = apiName.toLowerCase();
             if (!allOptionsMap.has(apiLower)) {
                 allOptionsMap.set(apiLower, { label: apiName, value: apiName, type: 'STRING' });
@@ -387,6 +413,11 @@ export default class PdfFillWizard extends LightningElement {
                 if (rawApiName.includes('.')) {
                     flatRow[rawApiName.split('.').join('_')] = this.resolveValue(row, rawApiName);
                 }
+                
+                // --- INJECT CONTEXT VARIABLES (Client-side) ---
+                if (rawApiName === 'CurrentUserName') { flatRow['CurrentUserName'] = this._userInfo?.Name || 'User'; }
+                else if (rawApiName === 'CurrentUserEmail') { flatRow['CurrentUserEmail'] = this._userInfo?.Email || 'user@example.com'; }
+                else if (rawApiName === 'CurrentDate') { flatRow['CurrentDate'] = new Date().toLocaleDateString(); }
             });
             return flatRow;
         });
@@ -440,8 +471,8 @@ export default class PdfFillWizard extends LightningElement {
         this.mappingData = (mappings || []).filter(m => m.active && (m.fieldPath || m.constantValue)).map(m => ({
             id: m.id,
             pdfLabel: m.displayLabel || m.pdfFieldName,
-            sourceApi: m.valueSourceType === 'Constant' ? null : m.fieldPath,
-            displayLabel: m.valueSourceType === 'Constant' ? m.constantValue : m.fieldPath
+            sourceApi: (m.valueSourceType === 'Constant' || m.valueSourceType === 'ContextVariable') ? null : m.fieldPath,
+            displayLabel: (m.valueSourceType === 'Constant' || m.valueSourceType === 'ContextVariable') ? m.constantValue : m.fieldPath
         }));
         this.updateMappingLabels(); 
         this.prepareColumnOptions(); 

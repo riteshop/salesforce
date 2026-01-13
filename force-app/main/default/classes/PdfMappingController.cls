@@ -239,7 +239,8 @@ public with sharing class PdfMappingController {
                 m.Pdf_Field_Name__c = pdfFieldName;
                 m.Display_Label__c = displayLabel;
                 m.Value_Source_Type__c = valueSourceType;
-                if (valueSourceType == 'Constant') {
+                // Robust check: ContextVariable OR Context Variable
+                if (valueSourceType == 'Constant' || valueSourceType.contains('Context')) {
                     m.Constant_Value__c = constantValue;
                     m.Field_Path__c = null;
                 } else {
@@ -259,7 +260,8 @@ public with sharing class PdfMappingController {
                 m.Pdf_Field_Name__c = pdfFieldName;
                 m.Display_Label__c = displayLabel;
                 m.Value_Source_Type__c = valueSourceType;
-                if (valueSourceType == 'Constant') {
+                // Robust check: ContextVariable OR Context Variable
+                if (valueSourceType == 'Constant' || valueSourceType.contains('Context')) {
                     m.Constant_Value__c = constantValue;
                     m.Field_Path__c = null;
                 } else {
