@@ -1,6 +1,7 @@
 import { LightningElement, track, wire } from 'lwc';
 import { CurrentPageReference, NavigationMixin } from 'lightning/navigation';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import USER_ID from '@salesforce/user/Id';
 
 // APEX
 import getCaseDetails from '@salesforce/apex/CaseDetailController.getCaseDetails';
@@ -20,6 +21,11 @@ export default class PlatformCaseDetail extends NavigationMixin(LightningElement
     @track isLoading = true;
     @track isSaving = false;
     caseId;
+    currentUserId = USER_ID;
+
+    // WORKFLOW STATE
+    @track selectedAssignee = '';
+    @track requiresReview = false;
 
     // PICKLISTS
     @track statusOptions = [];
@@ -79,15 +85,179 @@ export default class PlatformCaseDetail extends NavigationMixin(LightningElement
     }
 
     get accountName() {
-        return this.caseRecord?.Account?.Name || '';
+        return this.caseRecord?.AccountName || '';
     }
 
     get contactName() {
-        return this.caseRecord?.Contact?.Name || '';
+        return this.caseRecord?.ContactName || '';
+    }
+
+    get assignedUserName() {
+        return this.caseRecord?.AssignedUserName || '(Unassigned)';
     }
 
     get ccBccButtonLabel() {
         return this.showCcBcc ? 'Hide CC / BCC' : 'Show CC / BCC';
+    }
+
+    // ======== WORKFLOW GETTERS ========
+    get isQueueOwned() {
+        return this.caseRecord?.OwnerId?.startsWith('00G');
+    }
+
+    get isInProgress() {
+        if (!this.caseRecord) return false;
+        
+        // "In Progress" actions (Submit) are available if:
+        // 1. The case is Open (not Closed, Submitted, or Pending Review)
+        // 2. AND You are the Assigned User (Assigned_User__c)
+        // OR 3. You are the actual Owner (fallback for standard cases)
+        
+        const isOpen = !['Submitted', 'Closed', 'Pending Review'].includes(this.caseRecord.Status);
+        
+        const isAssignedToMe = this.caseRecord.AssignedUserId === this.currentUserId;
+        const isOwnerCurrentUser = this.caseRecord.OwnerId === this.currentUserId;
+        
+        return isOpen && (isAssignedToMe || isOwnerCurrentUser);
+    }
+
+    get managerName() {
+        return this.caseRecord?.ManagerName || '(None)';
+    }
+
+    get employeeName() {
+        return this.caseRecord?.EmployeeName || '(None)';
+    }
+ 
+    get isManager() {
+        if (!this.caseRecord) return false;
+        const myQueues = this.caseRecord.CurrentUserQueues || [];
+        return myQueues.includes(this.caseRecord.Type);
+    }
+ 
+    get isReviewing() {
+        if (!this.caseRecord) return false;
+        const isPending = this.caseRecord.Status === 'Pending Review';
+        
+        // You can review if:
+        // 1. You are specifically assigned (Assigned_User__c)
+        // 2. You are the tracked Manager (Manager__c)
+        // 3. You are a member of the Department Queue for this Case Type
+        
+        const isAssignedToMe = (this.caseRecord.AssignedUserId === this.currentUserId) || 
+                               (this.caseRecord.ManagerId === this.currentUserId);
+                               
+        return isPending && (isAssignedToMe || this.isManager); // Reusing isManager logic
+    }
+
+    get showAssignmentPanel() {
+        // 1. Must be a Manager to see this panel
+        // 2. Must NOT be assigned yet (once assigned, panel disappears)
+        return this.isManager && !this.caseRecord?.AssignedUserId;
+    }
+
+    get userOptions() {
+        return this.ownerOptions || []; // Reuse existing options loaded from Apex
+    }
+
+    // ======== WORKFLOW ACTIONS ========
+    handleAssigneeChange(e) {
+        this.selectedAssignee = e.detail.value;
+    }
+
+    handleReviewChange(e) {
+        this.requiresReview = e.target.checked;
+    }
+
+    handleAssign() {
+        if (!this.selectedAssignee) {
+             this.dispatchEvent(new ShowToastEvent({
+                title: 'Error',
+                message: 'Please select a user to assign.',
+                variant: 'error'
+            }));
+            return;
+        }
+
+        this.isSaving = true;
+        const updates = { 
+            Id: this.caseRecord.Id,
+            OwnerId: this.caseRecord.OwnerId, // Keep Queue as Owner (per user request)
+            Assigned_User__c: this.selectedAssignee, // The Employee visible on list
+            Manager__c: this.currentUserId, // I am the Manager assigning this
+            Employee__c: this.selectedAssignee, // Track who the worker is
+            Requires_Manager_Review__c: this.requiresReview,
+            Status: 'In Progress' 
+        };
+
+        this.performUpdate(updates, 'Case Assigned Successfully');
+    }
+
+    handleSubmit() {
+        this.isSaving = true;
+
+        const needsReview = this.caseRecord.RequiresManagerReview;
+
+        let ud = {
+            Id: this.caseRecord.Id,
+            Assigned_User__c: this.caseRecord.ManagerId // Default: Return to Manager
+        };
+
+        if (needsReview) {
+            ud.Status = 'Pending Review';
+        } else {
+            ud.Status = 'Closed';
+        }
+
+        this.performUpdate(ud, needsReview ? 'Case Submitted for Review' : 'Case Closed');
+    }
+
+    handleApprove() {
+        this.isSaving = true;
+        const updates = {
+            Id: this.caseRecord.Id,
+            Status: 'Closed'
+        };
+        this.performUpdate(updates, 'Case Approved and Closed');
+    }
+
+    handleReject() {
+        this.isSaving = true;
+        // Assign back to Employee
+        const updates = {
+            Id: this.caseRecord.Id,
+            Status: 'In Progress',
+            Assigned_User__c: this.caseRecord.EmployeeId // Return to Worker
+        };
+        this.performUpdate(updates, 'Case Returned to Employee');
+    }
+
+    performUpdate(fields, successMessage) {
+        // Optimistic Update: Update UI immediately
+        this.caseRecord = { ...this.caseRecord, ...fields };
+
+        this.isSaving = true;
+
+        updateCaseRecord({ updatedCase: fields })
+            .then(() => {
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Success',
+                    message: successMessage,
+                    variant: 'success'
+                }));
+                // Reload full case to ensure server-side calculated fields (formulas, names) are fresh
+                this.loadCase();
+            })
+            .catch(error => {
+                this.dispatchEvent(new ShowToastEvent({
+                    title: 'Error',
+                    message: error.body?.message || 'Update failed.',
+                    variant: 'error'
+                }));
+            })
+            .finally(() => {
+                this.isSaving = false;
+            });
     }
 
     // ======== PAGE REF / INIT ========
@@ -146,7 +316,7 @@ export default class PlatformCaseDetail extends NavigationMixin(LightningElement
                         o => o.value === this.caseRecord.OwnerId
                     );
                     this.ownerSearchTerm =
-                        current?.label || this.caseRecord?.Owner?.Name || '';
+                        current?.label || this.caseRecord?.OwnerName || '';
                 }
             })
             .then(() => {

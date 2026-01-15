@@ -1,5 +1,5 @@
-trigger CaseToSupportTicket on Case (after insert) {
-
+trigger CaseToSupportTicket on Case (after insert) { // v2
+ /*
     List<support_ticket__c> supportTickets = new List<support_ticket__c>();
     List<Salesforce__c> sfTickets = new List<Salesforce__c>();
     List<Status_Tracker__c> stTickets = new List<Status_Tracker__c>();
@@ -99,4 +99,5 @@ trigger CaseToSupportTicket on Case (after insert) {
     if (!stTickets.isEmpty()) {
         insert stTickets;
     }
+    */
 }

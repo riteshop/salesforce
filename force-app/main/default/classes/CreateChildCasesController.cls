@@ -1,4 +1,4 @@
-public with sharing class CreateChildCasesController {
+public with sharing class CreateChildCasesController { // v2
     
     @AuraEnabled
     public static String createChildCases(Id parentCaseId) {

@@ -1,10 +1,11 @@
-public with sharing class CaseListController {
+public without sharing class CaseListController {
 
     // ============================================
     // UPDATED getCases WITH:
     // - sorting
     // - searching
     // - pagination
+    // - SYSTEM MODE ACCESS (Platform User Support)
     // ============================================
     @AuraEnabled(cacheable=true)
     public static CaseListResult getCases(
@@ -12,7 +13,8 @@ public with sharing class CaseListController {
         Integer offsetValue,
         String sortField,
         String sortDirection,
-        String searchTerm
+        String searchTerm,
+        String filterMode // 'MY_ASSIGNMENTS', 'DEPARTMENT', 'CREATED_BY_ME'
     ) {
         if (pageSize == null || pageSize <= 0) pageSize = 50;
         if (offsetValue == null || offsetValue < 0) offsetValue = 0;
@@ -20,10 +22,10 @@ public with sharing class CaseListController {
         // Default sorting
         if (String.isBlank(sortField))     sortField = 'CreatedDate';
         if (String.isBlank(sortDirection)) sortDirection = 'DESC';
+        if (String.isBlank(filterMode))    filterMode = 'MY_ASSIGNMENTS';
 
-        // Prevent SOQL injection by whitelisting
+        // Prevent SOQL injection
         String orderByField;
-
         switch on sortField {
             when 'CaseNumber'  { orderByField = 'CaseNumber'; }
             when 'Subject'     { orderByField = 'Subject'; }
@@ -33,61 +35,118 @@ public with sharing class CaseListController {
             when else          { orderByField = 'CreatedDate'; }
         }
 
-        String direction = (sortDirection != null && sortDirection.toLowerCase() == 'asc')
-            ? 'ASC'
-            : 'DESC';
+        String direction = (sortDirection != null && sortDirection.toLowerCase() == 'asc') ? 'ASC' : 'DESC';
 
-        // Base WHERE
-        String baseWhere = 'WHERE IsDeleted = false';
-        String likeTerm;
+        String userId = UserInfo.getUserId();
+
+        // 1. Find Queues this user is a member of (for Department visibility)
+        Set<Id> myQueueIds = new Set<Id>();
+        for (GroupMember gm : [
+            SELECT GroupId 
+            FROM GroupMember 
+            WHERE UserOrGroupId = :userId 
+            AND Group.Type = 'Queue'
+        ]) {
+            myQueueIds.add(gm.GroupId);
+        }
+
+        // 2. Identify IT/RCM membership specific logic
+        Boolean isManager = !myQueueIds.isEmpty();
+        
+        // 3. Build WHERE Query based on Filter Mode
+        String whereClause = 'WHERE IsDeleted = false ';
+
+        if (filterMode == 'MY_ASSIGNMENTS') {
+            // Show cases Assigned to Me OR Owned by Me (standard standard users)
+            whereClause += 'AND (Assigned_User__c = :userId OR OwnerId = :userId) ';
+        } 
+        else if (filterMode == 'DEPARTMENT') {
+            // Show cases Owned by my Queues
+            if (myQueueIds.isEmpty()) {
+                // If not in a queue, return nothing for this view
+                whereClause += 'AND (Id = null) '; 
+            } else {
+                whereClause += 'AND (OwnerId IN :myQueueIds) ';
+            }
+        } 
+        else if (filterMode == 'CREATED_BY_ME') {
+            // Show cases Created by Me (Tracked via standard field OR our custom proxy)
+            whereClause += 'AND (CreatedById = :userId OR Case_Creator__c = :userId) ';
+        }
 
         // Add search filter
         if (!String.isBlank(searchTerm)) {
-            likeTerm = '%' + searchTerm + '%';
-            baseWhere += ' AND Subject LIKE :likeTerm';
+            String likeTerm = '%' + searchTerm + '%';
+            whereClause += 'AND (Subject LIKE :likeTerm OR CaseNumber LIKE :likeTerm) ';
         }
 
         // Main query
         String soql =
-            'SELECT Id, CaseNumber, Subject, Status, Priority, CreatedDate ' +
+            'SELECT Id, CaseNumber, Subject, Status, Priority, CreatedDate, Assigned_User__c ' +
             'FROM Case ' +
-            baseWhere +
+            whereClause +
             ' ORDER BY ' + orderByField + ' ' + direction +
             ' LIMIT :pageSize OFFSET :offsetValue';
 
         List<Case> records = Database.query(soql);
 
         // Total count
-        String countSoql = 'SELECT COUNT() FROM Case ' + baseWhere;
+        String countSoql = 'SELECT COUNT() FROM Case ' + whereClause;
         Integer totalCount = (Integer)Database.countQuery(countSoql);
 
-        return new CaseListResult(records, totalCount);
+        return new CaseListResult(records, totalCount, isManager);
     }
 
-    // ============================================
-    // WRAPPER CLASS — unchanged
-    // ============================================
     public class CaseListResult {
         @AuraEnabled public List<Case> records;
         @AuraEnabled public Integer totalRecords;
+        @AuraEnabled public Boolean isManager;
 
-        public CaseListResult(List<Case> records, Integer totalRecords) {
+        public CaseListResult(List<Case> records, Integer totalRecords, Boolean isManager) {
             this.records = records;
             this.totalRecords = totalRecords;
+            this.isManager = isManager;
         }
     }
 
     // ============================================
     // CREATE CASE — unchanged
     // ============================================
+    // ============================================
+    // CREATE CASE — UPDATED
+    // ============================================
+    // ============================================
+    // CREATE CASE — UPDATED
+    // ============================================
     @AuraEnabled
     public static Id createCase(Case caseRecord) {
-        if (caseRecord.OwnerId == null) {
-            caseRecord.OwnerId = UserInfo.getUserId();
-        }
+        try {
+            Id currentUserId = UserInfo.getUserId();
 
-        insert caseRecord;
-        return caseRecord.Id;
+            // ============================================================
+            // PLATFORM USER WORKAROUND (LICENSE PROXY)
+            // ============================================================
+            // We cannot insert Case directly if User License is "Salesforce Platform".
+            // Instead, we publish a Platform Event. A trigger (running as System) creates the Case.
+            
+            Case_Creation_Request__e request = new Case_Creation_Request__e();
+            request.Subject__c = caseRecord.Subject;
+            request.Description__c = caseRecord.Description;
+            request.Status__c = 'New'; // Default
+            request.Origin__c = 'Web'; // Default
+            request.Priority__c = caseRecord.Priority;
+            request.Type__c = caseRecord.Type;
+            request.Requestor_User_Id__c = currentUserId;
+            
+            // Publish the event
+            EventBus.publish(request);
+            
+            // Return null because we don't have the Case ID yet (Async)
+            return null; 
+            
+        } catch (Exception e) {
+            throw new AuraHandledException('Create Error: ' + e.getMessage());
+        }
     }
 
     // ============================================
@@ -150,7 +209,46 @@ public with sharing class CaseListController {
         return results;
     }
 
-    // Lookup wrapper
+    // ============================================
+    // PICKLIST VALUES (Bypass UI API for Platform Users)
+    // ============================================
+    @AuraEnabled(cacheable=true)
+    public static Map<String, List<PicklistOption>> getCasePicklistValues() {
+        Map<String, List<PicklistOption>> result = new Map<String, List<PicklistOption>>();
+        
+        result.put('Status',   getOptionsForField(Case.Status));
+        result.put('Origin',   getOptionsForField(Case.Origin));
+        result.put('Priority', getOptionsForField(Case.Priority));
+        result.put('Reason',   getOptionsForField(Case.Reason));
+        result.put('Type',     getOptionsForField(Case.Type));
+
+        return result;
+    }
+
+    private static List<PicklistOption> getOptionsForField(Schema.SObjectField field) {
+        List<PicklistOption> options = new List<PicklistOption>();
+        Schema.DescribeFieldResult describe = field.getDescribe();
+        List<Schema.PicklistEntry> entries = describe.getPicklistValues();
+
+        for (Schema.PicklistEntry entry : entries) {
+            if (entry.isActive()) {
+                options.add(new PicklistOption(entry.getLabel(), entry.getValue()));
+            }
+        }
+        return options;
+    }
+
+    public class PicklistOption {
+        @AuraEnabled public String label;
+        @AuraEnabled public String value;
+
+        public PicklistOption(String label, String value) {
+            this.label = label;
+            this.value = value;
+        }
+    }
+
+
     public class LookupResult {
         @AuraEnabled public Id Id;
         @AuraEnabled public String Name;

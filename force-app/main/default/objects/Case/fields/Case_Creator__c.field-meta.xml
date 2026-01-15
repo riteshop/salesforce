@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Case_Creator__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>Stores the User who originally requested the case. Used because Platform Event triggers run as Automated Process.</description>
+    <externalId>false</externalId>
+    <label>Case Creator</label>
+    <referenceTo>User</referenceTo>
+    <relationshipName>CreatedCases</relationshipName>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

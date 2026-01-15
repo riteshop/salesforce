@@ -1,27 +1,56 @@
-.lookup-container {
-    position: relative;
-}
-
-.lookup-dropdown {
-    position: absolute;
-    width: 100%;
-    background: white;
-    border: 1px solid #d8dde6;
-    border-radius: 4px;
-    max-height: 180px;
-    overflow-y: auto;
-    z-index: 9999;
-}
-
-.lookup-option {
-    padding: 0.5rem;
+.row-clickable {
     cursor: pointer;
+    transition: background-color 0.1s;
 }
 
-.lookup-option:hover {
-    background: #f4f6f9;
+/* Base Hover for all clickable rows */
+.row-clickable:hover {
+    filter: brightness(0.98); /* Slight darken on hover */
 }
-.description-box {
-    --slds-c-textarea-sizing-min-height: 100px;
-    --slds-c-textarea-sizing-height: 100px;
+
+/* Status Colors */
+
+/* New: No special background, just standard */
+.row-new {
+    background-color: #ffffff;
+}
+
+/* Pending Review: Light Orange */
+.row-pending {
+    background-color: #fffaf0; /* Warning-like */
+}
+
+/* In Progress: Light Blue */
+.row-inprogress {
+    background-color: #f0f5ff; /* Subtle blue */
+}
+
+
+
+/* Closed: Light Green */
+.row-closed {
+    background-color: #f6ffed; /* Success-like */
+}
+
+/* Status Cell Text Styles (Optional override if needed) */
+.status-text {
+    font-weight: 500;
+}
+
+.priority-icon {
+    font-weight: 900;
+    font-size: 1.25em; 
+    line-height: 1;
+    display: inline-block;
+}
+
+/* Bright Priority Colors */
+.priority-green {
+    color: #2ecc71; /* Lighter Green */
+}
+.priority-orange {
+    color: #ffbf00; /* Amber */
+}
+.priority-red {
+    color: #ff453a; /* Lighter Red */
 }

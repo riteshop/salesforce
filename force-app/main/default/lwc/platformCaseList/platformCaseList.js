@@ -4,57 +4,60 @@ import USER_ID from '@salesforce/user/Id';
 
 import getCases from '@salesforce/apex/CaseListController.getCases';
 import createCase from '@salesforce/apex/CaseListController.createCase';
+import getCasePicklistValues from '@salesforce/apex/CaseListController.getCasePicklistValues';
 import searchContacts from '@salesforce/apex/CaseListController.searchContacts';
 import searchAccounts from '@salesforce/apex/CaseListController.searchAccounts';
 import searchUsers from '@salesforce/apex/CaseListController.searchUsers';
 
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
-//
-// UI API imports for dynamic picklists
-//
-import { getObjectInfo, getPicklistValues } from 'lightning/uiObjectInfoApi';
-import CASE_OBJECT from '@salesforce/schema/Case';
-import STATUS_FIELD from '@salesforce/schema/Case.Status';
-import PRIORITY_FIELD from '@salesforce/schema/Case.Priority';
-import ORIGIN_FIELD from '@salesforce/schema/Case.Origin';
-import REASON_FIELD from '@salesforce/schema/Case.Reason';
-import TYPE_FIELD from '@salesforce/schema/Case.Type';
-
 export default class PlatformCaseList extends NavigationMixin(LightningElement) {
 
     // ======================
-    // TABLE + STATE
+    // PICKLISTS (APEX)
+    // ======================
+    @track statusOptions = [];
+    @track originOptions = [];
+    @track priorityOptions = [];
+    @track reasonOptions = [];
+    @track typeOptions = [];
+
+    connectedCallback() {
+        this.loadCases();
+        this.loadPicklists();
+    }
+
+    loadPicklists() {
+        getCasePicklistValues()
+            .then(data => {
+                this.statusOptions   = data.Status;
+                this.originOptions   = data.Origin;
+                this.priorityOptions = data.Priority;
+                
+                // Add none options for optional fields
+                this.reasonOptions = [{ label: '-- None --', value: null }, ...data.Reason];
+                this.typeOptions   = [{ label: '-- None --', value: null }, ...data.Type];
+            })
+            .catch(error => {
+                console.error('Error fetching picklists', error);
+            });
+    }
+
+    // ======================
+    // TABLE STATE
     // ======================
     @track cases = [];
     @track error;
     @track isLoading = false;
-
-    // SEARCH
-    @track searchTerm = '';
-    searchTimeout;
-
-    // SORTING
-    sortedBy = 'CreatedDate';
-    sortedDirection = 'desc';
-
-    // PAGINATION
+    @track totalRecords = 0;
+    @track totalPages = 0;
+    
+    // PAGINATION STATE
     pageSize = 50;
     pageNumber = 1;
-    totalRecords = 0;
-    totalPages = 0;
-
-    get offsetValue() {
-        return (this.pageNumber - 1) * this.pageSize;
-    }
-
-    get isFirstPage() {
-        return this.pageNumber === 1;
-    }
-
-    get isLastPage() {
-        return this.pageNumber === this.totalPages;
-    }
+    searchTerm = '';
+    sortedBy = 'CreatedDate';
+    sortedDirection = 'desc';
 
     // ======================
     // TABLE COLUMNS
@@ -77,31 +80,40 @@ export default class PlatformCaseList extends NavigationMixin(LightningElement) 
         { label: "Created Date", fieldName: "CreatedDate", type: "date", sortable: true }
     ];
 
-    connectedCallback() {
-        this.loadCases();
-    }
+    // ======================
+    // MODAL & FORM STATE
+    // ======================
+    @track showNewCaseModal = false;
 
-    loadCases() {
-        this.isLoading = true;
+    // LOOKUPS
+    @track ownerSearchTerm = "You (Current User)";
+    @track ownerOptions = [];
+    @track ownerResultsVisible = false;
+    @track selectedOwnerId = USER_ID;
 
-        getCases({
-            pageSize: this.pageSize,
-            offsetValue: this.offsetValue,
-            sortField: this.sortedBy,
-            sortDirection: this.sortedDirection,
-            searchTerm: this.searchTerm
-        })
-        .then(result => {
-            this.cases = result.records;
-            this.totalRecords = result.totalRecords;
-            this.totalPages = Math.ceil(result.totalRecords / this.pageSize);
-            this.isLoading = false;
-        })
-        .catch(err => {
-            this.error = err.body ? err.body.message : err.message;
-            this.isLoading = false;
-        });
-    }
+    @track contactSearchTerm = "";
+    @track contactOptions = [];
+    @track contactResultsVisible = false;
+    @track selectedContactId;
+
+    @track accountSearchTerm = "";
+    @track accountOptions = [];
+    @track accountResultsVisible = false;
+    @track selectedAccountId;
+
+    @track userSearchTerm = "";
+    @track userOptions = [];
+    @track userResultsVisible = false;
+    @track selectedUserId;
+
+    // FIELDS
+    @track newCaseStatus = "New";
+    @track newCaseOrigin = "Web";
+    @track newCasePriority = "Medium";
+    @track newCaseReason = null;
+    @track newCaseType = null;
+    @track newCaseSubject = "";
+    @track newCaseDescription = "";
 
     // ======================
     // SEARCH HANDLING
@@ -128,23 +140,6 @@ export default class PlatformCaseList extends NavigationMixin(LightningElement) 
     }
 
     // ======================
-    // PAGINATION
-    // ======================
-    handleNext() {
-        if (!this.isLastPage) {
-            this.pageNumber++;
-            this.loadCases();
-        }
-    }
-
-    handlePrevious() {
-        if (!this.isFirstPage) {
-            this.pageNumber--;
-            this.loadCases();
-        }
-    }
-
-    // ======================
     // OPEN ROW
     // ======================
     handleRowAction(event) {
@@ -159,80 +154,137 @@ export default class PlatformCaseList extends NavigationMixin(LightningElement) 
         }
     }
 
-    // ======================================================
-    // EVERYTHING BELOW THIS LINE = YOUR ORIGINAL CODE
-    // LOOKUPS, MODAL, FIELD HANDLERS, NEW CASE CREATION
-    // I DID NOT MODIFY ANYTHING
-    // ======================================================
-
-    @track showNewCaseModal = false;
-
-    // LOOKUPS
-    @track ownerSearchTerm = "You (Current User)";
-    @track ownerOptions = [];
-    @track ownerResultsVisible = false;
-    @track selectedOwnerId = USER_ID;
-
-    @track contactSearchTerm = "";
-    @track contactOptions = [];
-    @track contactResultsVisible = false;
-    @track selectedContactId;
-
-    @track accountSearchTerm = "";
-    @track accountOptions = [];
-    @track accountResultsVisible = false;
-    @track selectedAccountId;
-
-    @track userSearchTerm = "";
-    @track userOptions = [];
-    @track userResultsVisible = false;
-    @track selectedUserId;
-
-    // Fields
-    @track newCaseStatus = "New";
-    @track newCaseOrigin = "Web";
-    @track newCasePriority = "Medium";
-    @track newCaseReason = null;
-    @track newCaseType = null;
-    @track newCaseSubject = "";
-    @track newCaseDescription = "";
-
-    // ---- Your dynamic picklist wires unchanged ----
-    @wire(getObjectInfo, { objectApiName: CASE_OBJECT })
-    caseInfo;
-
-    @wire(getPicklistValues, {
-        fieldApiName: STATUS_FIELD,
-        recordTypeId: '$caseInfo.data.defaultRecordTypeId'
-    })
-    wiredStatus({ data }) { if (data) this.statusOptions = data.values; }
-
-    @wire(getPicklistValues, {
-        fieldApiName: ORIGIN_FIELD,
-        recordTypeId: '$caseInfo.data.defaultRecordTypeId'
-    })
-    wiredOrigin({ data }) { if (data) this.originOptions = data.values;}
-
-    @wire(getPicklistValues, {
-        fieldApiName: PRIORITY_FIELD,
-        recordTypeId: '$caseInfo.data.defaultRecordTypeId'
-    })
-    wiredPriority({ data }) { if (data) this.priorityOptions = data.values;}
-
-    @wire(getPicklistValues, {
-        fieldApiName: REASON_FIELD,
-        recordTypeId: '$caseInfo.data.defaultRecordTypeId'
-    })
-    wiredReason({ data }) {
-        if (data) this.reasonOptions = [{ label: '-- None --', value: null }, ...data.values];
+    get offsetValue() {
+        return (this.pageNumber - 1) * this.pageSize;
     }
 
-    @wire(getPicklistValues, {
-        fieldApiName: TYPE_FIELD,
-        recordTypeId: '$caseInfo.data.defaultRecordTypeId'
-    })
-    wiredType({ data }) {
-        if (data) this.typeOptions = [{ label: '-- None --', value: null }, ...data.values];
+    get isFirstPage() { return this.pageNumber === 1; }
+    get isLastPage() { return this.pageNumber === this.totalPages; }
+
+    // FILTERS
+    @track currentFilter = 'MY_ASSIGNMENTS'; // 'MY_ASSIGNMENTS', 'DEPARTMENT', 'CREATED_BY_ME'
+    @track isManager = false;
+
+    // Filter Getters for UI state
+    get isMyAssignments() { return this.currentFilter === 'MY_ASSIGNMENTS' ? 'brand' : 'neutral'; }
+    get isDepartment() { return this.currentFilter === 'DEPARTMENT' ? 'brand' : 'neutral'; }
+    get isCreatedByMe() { return this.currentFilter === 'CREATED_BY_ME' ? 'brand' : 'neutral'; }
+
+    handleFilterChange(event) {
+        const selected = event.target.dataset.filter;
+        if (this.currentFilter !== selected) {
+            this.currentFilter = selected;
+            this.pageNumber = 1;
+            this.loadCases();
+        }
+    }
+
+    loadCases() {
+        this.isLoading = true;
+
+        getCases({
+            pageSize: this.pageSize,
+            offsetValue: this.offsetValue,
+            sortField: this.sortedBy,
+            sortDirection: this.sortedDirection,
+            searchTerm: this.searchTerm,
+            filterMode: this.currentFilter
+        })
+        .then(result => {
+            this.cases = (result.records || []).map(c => {
+                let rowCss = 'row-clickable ';
+                switch(c.Status) {
+                    case 'New': rowCss += 'row-new'; break;
+                    case 'In Progress': rowCss += 'row-inprogress'; break;
+                    case 'Closed': rowCss += 'row-closed'; break;
+                    case 'Pending Review': rowCss += 'row-pending'; break;
+                    default: rowCss += 'row-new';
+                }
+
+                // Priority Logic
+                let pLoop = [];
+                let pClass = 'priority-icon slds-m-right_xx-small ';
+                
+                if (c.Priority === 'High' || c.Priority === 'Critical') {
+                    pLoop = [1, 2, 3];
+                    pClass += 'priority-red';
+                } else if (c.Priority === 'Medium') {
+                    pLoop = [1, 2];
+                    pClass += 'priority-orange';
+                } else {
+                    // Low or null
+                    pLoop = [1];
+                    pClass += 'priority-green';
+                }
+                
+                return { 
+                    ...c, 
+                    rowClass: rowCss,
+                    priorityLoop: pLoop,
+                    priorityClass: pClass
+                };
+            });
+
+            this.totalRecords = result.totalRecords;
+            this.totalPages = Math.ceil(result.totalRecords / this.pageSize);
+            this.isManager = result.isManager; // Update manager status
+            this.isLoading = false;
+        })
+        .catch(err => {
+            this.error = err.body ? err.body.message : err.message;
+            this.isLoading = false;
+        });
+    }
+
+    // ======================
+    // CUSTOM TABLE HANDLERS
+    // ======================
+    handleRowClick(event) {
+        const caseId = event.currentTarget.dataset.id;
+        this[NavigationMixin.Navigate]({
+            type: "standard__navItemPage",
+            attributes: { apiName: "Platform_Case_Detail" },
+            state: { c__caseId: caseId }
+        });
+    }
+
+    handleHeaderClick(event) {
+        const field = event.currentTarget.dataset.field;
+        
+        // Toggle direction if same field, otherwise default to desc (or asc)
+        if (this.sortedBy === field) {
+            this.sortedDirection = this.sortedDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+            this.sortedBy = field;
+            this.sortedDirection = 'desc'; // Default new sorts to newest/highest
+        }
+        
+        this.pageNumber = 1;
+        this.loadCases();
+    }
+    
+    // Icons for sort arrows (computed)
+    get isSortCaseNumber() { return this.sortedBy === 'CaseNumber'; }
+    get isSortSubject() { return this.sortedBy === 'Subject'; }
+    get isSortStatus() { return this.sortedBy === 'Status'; }
+    get isSortPriority() { return this.sortedBy === 'Priority'; }
+    get isSortDate() { return this.sortedBy === 'CreatedDate'; }
+    
+    get sortIconName() {
+        return this.sortedDirection === 'asc' ? 'utility:arrowup' : 'utility:arrowdown';
+    }
+    handleNext() {
+        if (!this.isLastPage) {
+            this.pageNumber++;
+            this.loadCases();
+        }
+    }
+
+    handlePrevious() {
+        if (!this.isFirstPage) {
+            this.pageNumber--;
+            this.loadCases();
+        }
     }
 
     // ======================
@@ -391,21 +443,37 @@ export default class PlatformCaseList extends NavigationMixin(LightningElement) 
 
             ContactId: this.selectedContactId,
             AccountId: this.selectedAccountId,
-            OwnerId: this.selectedOwnerId
+            OwnerId: this.selectedOwnerId,
+            Assigned_User__c: this.selectedUserId
         };
 
         createCase({ caseRecord: record })
-            .then(() => {
+            .then((resultId) => {
                 this.showNewCaseModal = false;
-                this.loadCases();
+                
+                // ASYNC PROXY HANDLING
+                if (resultId) {
+                    // Standard User (Success)
+                     this.dispatchEvent(
+                        new ShowToastEvent({
+                            title: "Success",
+                            message: "Case created successfully.",
+                            variant: "success"
+                        })
+                    );
+                    // Open the case? (Optional, maybe just reload)
+                } else {
+                    // Platform User (Event Published)
+                     this.dispatchEvent(
+                        new ShowToastEvent({
+                            title: "Request Submitted",
+                            message: "Ticket request sent. It may take a moment to appear in the list.",
+                            variant: "info"
+                        })
+                    );
+                }
 
-                this.dispatchEvent(
-                    new ShowToastEvent({
-                        title: "Success",
-                        message: "Case created successfully.",
-                        variant: "success"
-                    })
-                );
+                this.loadCases();
             })
             .catch(err => {
                 this.dispatchEvent(

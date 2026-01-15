@@ -1,17 +1,28 @@
 <template>
-    <lightning-card title="All Cases" icon-name="standard:case">
-        <div class="slds-p-around_small">
+    <lightning-card title="Case Management" icon-name="standard:case">
+        <div class="slds-m-around_medium">
+            
+            <!-- HEADER: FILTERS & ACTIONS -->
+            <div class="slds-m-bottom_medium slds-grid slds-grid_align-spread slds-wrap">
+                
+                <!-- FILTER TABS -->
+                <div class="slds-col">
+                    <lightning-button-group>
+                        <lightning-button label="My Assignments" variant={isMyAssignments} onclick={handleFilterChange} data-filter="MY_ASSIGNMENTS"></lightning-button>
+                        <template if:true={isManager}>
+                             <lightning-button label="Department Cases" variant={isDepartment} onclick={handleFilterChange} data-filter="DEPARTMENT"></lightning-button>
+                        </template>
+                        <lightning-button label="Created by Me" variant={isCreatedByMe} onclick={handleFilterChange} data-filter="CREATED_BY_ME"></lightning-button>
+                    </lightning-button-group>
+                </div>
 
-            <!-- Top Bar -->
-            <div class="slds-m-bottom_small slds-grid slds-grid_align-spread">
-                <lightning-button 
-                    label="New Case"
-                    variant="brand"
-                    onclick={openNewCaseModal}>
-                </lightning-button>
-
-                <div>
-                    Page {pageNumber} of {totalPages} — Total Cases: {totalRecords}
+                <!-- NEW CASE BUTTON -->
+                <div class="slds-col">
+                    <lightning-button 
+                        label="New Case"
+                        variant="brand"
+                        onclick={openNewCaseModal}>
+                    </lightning-button>
                 </div>
             </div>
 
@@ -19,9 +30,10 @@
             <div class="slds-m-bottom_small">
                 <lightning-input
                     type="search"
-                    label="Search by Subject"
+                    label="Search"
+                    variant="label-hidden"
                     value={searchTerm}
-                    placeholder="Type to filter cases..."
+                    placeholder="Search Cases..."
                     onkeyup={handleSearchChange}>
                 </lightning-input>
             </div>
@@ -36,18 +48,113 @@
                 <p class="slds-text-color_error">{error}</p>
             </template>
 
-            <!-- CASE TABLE -->
+            <!-- CASE TABLE (Custom HTML for Row Coloring) -->
             <template if:true={cases}>
-                <lightning-datatable
-                    key-field="Id"
-                    data={cases}
-                    columns={columns}
-                    hide-checkbox-column
-                    onsort={handleSort}
-                    sorted-by={sortedBy}
-                    sorted-direction={sortedDirection}
-                    onrowaction={handleRowAction}>
-                </lightning-datatable>
+                <div class="slds-table_header-fixed_container">
+                    <div class="slds-scrollable_y" style="height:100%;">
+                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_fixed-layout">
+                            <thead>
+                                <tr class="slds-line-height_reset">
+                                    
+                                    <!-- Case Number -->
+                                    <th class="" scope="col">
+                                        <a class="slds-th__action slds-text-link_reset" href="javascript:void(0);" role="button" tabindex="0" onclick={handleHeaderClick} data-field="CaseNumber">
+                                            <span class="slds-assistive-text">Sort by: </span>
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                                                <span class="slds-truncate" title="Case Number">Case Number</span>
+                                                <template if:true={isSortCaseNumber}>
+                                                    <lightning-icon icon-name={sortIconName} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </a>
+                                    </th>
+
+                                    <!-- Subject -->
+                                    <th class="" scope="col">
+                                        <a class="slds-th__action slds-text-link_reset" href="javascript:void(0);" role="button" tabindex="0" onclick={handleHeaderClick} data-field="Subject">
+                                            <span class="slds-assistive-text">Sort by: </span>
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                                                <span class="slds-truncate" title="Subject">Subject</span>
+                                                <template if:true={isSortSubject}>
+                                                     <lightning-icon icon-name={sortIconName} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </a>
+                                    </th>
+
+                                    <!-- Status -->
+                                    <th class="" scope="col">
+                                        <a class="slds-th__action slds-text-link_reset" href="javascript:void(0);" role="button" tabindex="0" onclick={handleHeaderClick} data-field="Status">
+                                            <span class="slds-assistive-text">Sort by: </span>
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                                                <span class="slds-truncate" title="Status">Status</span>
+                                                <template if:true={isSortStatus}>
+                                                     <lightning-icon icon-name={sortIconName} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </a>
+                                    </th>
+
+                                    <!-- Priority -->
+                                    <th class="" scope="col">
+                                        <a class="slds-th__action slds-text-link_reset" href="javascript:void(0);" role="button" tabindex="0" onclick={handleHeaderClick} data-field="Priority">
+                                            <span class="slds-assistive-text">Sort by: </span>
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                                                <span class="slds-truncate" title="Priority">Priority</span>
+                                                <template if:true={isSortPriority}>
+                                                     <lightning-icon icon-name={sortIconName} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </a>
+                                    </th>
+
+                                    <!-- Created Date -->
+                                    <th class="" scope="col">
+                                        <a class="slds-th__action slds-text-link_reset" href="javascript:void(0);" role="button" tabindex="0" onclick={handleHeaderClick} data-field="CreatedDate">
+                                            <span class="slds-assistive-text">Sort by: </span>
+                                            <div class="slds-grid slds-grid_vertical-align-center slds-has-flexi-truncate">
+                                                <span class="slds-truncate" title="Created Date">Created Date</span>
+                                                <template if:true={isSortDate}>
+                                                     <lightning-icon icon-name={sortIconName} size="xx-small" class="slds-m-left_xx-small"></lightning-icon>
+                                                </template>
+                                            </div>
+                                        </a>
+                                    </th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={cases} for:item="c">
+                                    <tr key={c.Id} class={c.rowClass} onclick={handleRowClick} data-id={c.Id}>
+                                        <td data-label="Case Number">
+                                            <div class="slds-truncate" title={c.CaseNumber}>
+                                                <a>{c.CaseNumber}</a>
+                                            </div>
+                                        </td>
+                                        <td data-label="Subject">
+                                            <div class="slds-truncate" title={c.Subject}>{c.Subject}</div>
+                                        </td>
+                                        <td data-label="Status">
+                                            <div class="slds-truncate status-text" title={c.Status}>{c.Status}</div>
+                                        </td>
+                                        <td data-label="Priority">
+                                            <div class="slds-truncate" title={c.Priority}>
+                                                <template for:each={c.priorityLoop} for:item="p">
+                                                    <span key={p} class={c.priorityClass}>!</span>
+                                                </template>
+                                            </div>
+                                        </td>
+                                        <td data-label="Created Date">
+                                            <div class="slds-truncate" title={c.CreatedDate}>
+                                                <lightning-formatted-date-time value={c.CreatedDate} year="numeric" month="numeric" day="numeric" hour="2-digit" minute="2-digit"></lightning-formatted-date-time>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
                 <!-- Pagination Controls -->
                 <div class="slds-m-top_small slds-grid slds-grid_align-spread">
@@ -91,39 +198,6 @@
                 <!-- BODY -->
                 <div class="slds-modal__content slds-p-around_medium">
 
-                    <!-- Case Owner (Current User Display) -->
-                    <lightning-input 
-                        label="Case Owner (Current User)" 
-                        value="You (Current User)"
-                        disabled>
-                    </lightning-input>
-
-                    <!-- CASE OWNER LOOKUP -->
-                    <div class="lookup-container slds-m-top_medium">
-                        <lightning-input
-                            label="Change Case Owner"
-                            value={ownerSearchTerm}
-                            onchange={handleOwnerSearchChange}
-                            placeholder="Search Users..."
-                            class="lookup-input">
-                        </lightning-input>
-
-                        <template if:true={ownerResultsVisible}>
-                            <div class="lookup-dropdown">
-                                <template for:each={ownerOptions} for:item="o">
-                                    <div 
-                                        key={o.value}
-                                        class="lookup-option"
-                                        data-id={o.value}
-                                        data-name={o.label}
-                                        onclick={handleOwnerSelect}>
-                                        {o.label}
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                    </div>
-
                     <!-- CONTACT LOOKUP -->
                     <div class="lookup-container slds-m-top_medium">
                         <lightning-input
@@ -150,76 +224,8 @@
                         </template>
                     </div>
 
-                    <!-- ACCOUNT LOOKUP -->
-                    <div class="lookup-container slds-m-top_medium">
-                        <lightning-input
-                            label="Account Name"
-                            value={accountSearchTerm}
-                            onchange={handleAccountSearchChange}
-                            placeholder="Search Accounts..."
-                            class="lookup-input">
-                        </lightning-input>
-
-                        <template if:true={accountResultsVisible}>
-                            <div class="lookup-dropdown">
-                                <template for:each={accountOptions} for:item="acc">
-                                    <div 
-                                        key={acc.value}
-                                        class="lookup-option"
-                                        data-id={acc.value}
-                                        data-name={acc.label}
-                                        onclick={handleAccountSelect}>
-                                        {acc.label}
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                    </div>
-
-                    <!-- ASSIGNED USER LOOKUP -->
-                    <div class="lookup-container slds-m-top_medium">
-                        <lightning-input
-                            label="Assigned User"
-                            value={userSearchTerm}
-                            onchange={handleUserSearchChange}
-                            placeholder="Search Users..."
-                            class="lookup-input">
-                        </lightning-input>
-
-                        <template if:true={userResultsVisible}>
-                            <div class="lookup-dropdown">
-                                <template for:each={userOptions} for:item="u">
-                                    <div 
-                                        key={u.value}
-                                        class="lookup-option"
-                                        data-id={u.value}
-                                        data-name={u.label}
-                                        onclick={handleUserSelect}>
-                                        {u.label}
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                    </div>
-
                     <!-- CASE FIELDS -->
-                    <lightning-combobox
-                        class="slds-m-top_medium"
-                        label="Status"
-                        value={newCaseStatus}
-                        options={statusOptions}
-                        onchange={handleFieldChange}
-                        data-field="Status">
-                    </lightning-combobox>
-
-                    <lightning-combobox
-                        class="slds-m-top_medium"
-                        label="Case Origin"
-                        value={newCaseOrigin}
-                        options={originOptions}
-                        onchange={handleFieldChange}
-                        data-field="Origin">
-                    </lightning-combobox>
+                    <!-- Status, Origin, Account REMOVED per request -->
 
                     <lightning-combobox
                         class="slds-m-top_medium"
